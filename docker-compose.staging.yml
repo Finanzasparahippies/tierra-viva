@@ -1,0 +1,85 @@
+name: tierraviva-staging
+services:
+  backend-staging:
+    container_name: tierraviva-staging_backend
+    image: tierraviva-backend:staging
+    build:
+      context: ./tierraViva-backend
+      dockerfile: Dockerfile
+    env_file: .env.staging
+    volumes:
+      - ./tierraViva-backend:/app:Z
+      - static_volume_staging:/app/staticfiles
+      - media_volume_staging:/app/media
+    environment:
+      - STATIC_ROOT=/app/staticfiles
+      - MEDIA_ROOT=/app/media
+      - ENVIRONMENT=staging
+    restart: always
+    networks:
+      - default
+      - prod_network
+
+  frontend-staging:
+    container_name: tierraviva-staging_frontend
+    image: tierraviva-frontend:staging
+    build:
+      context: ./tierraViva-front
+      dockerfile: Dockerfile
+    volumes:
+      - ./tierraViva-front:/app:Z
+      - /app/node_modules
+      - /app/.next
+    env_file: .env.staging
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
+    restart: always
+    networks:
+      - default
+      - prod_network
+
+  nginx-staging:
+    container_name: tierraviva-staging_nginx
+    image: tierraviva-nginx:staging
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "3080:80"
+    volumes:
+      - ./docker/nginx/staging.conf:/etc/nginx/default.conf.template:Z
+      - static_volume_staging:/app/staticfiles
+      - media_volume_staging:/app/media
+    depends_on:
+      - backend-staging
+      - frontend-staging
+    restart: always
+    networks:
+      - default
+      - prod_network
+
+  auto-stop-staging:
+    container_name: tierraviva-staging_autostop
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/app:ro
+    working_dir: /app
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: >
+      sh -c "echo 'Staging environment auto-stop timer started. Interval: ${AUTO_STOP_INTERVAL:-24h}...' && sleep ${AUTO_STOP_INTERVAL:-24h} && echo 'Time limit reached. Automatically stopping staging environment...' && docker compose -f docker-compose.staging.yml down"
+    restart: "no"
+    networks:
+      - default
+
+volumes:
+  static_volume_staging:
+    name: tierraviva-staging_static_volume
+  media_volume_staging:
+    name: tierraviva-staging_media_volume
+
+networks:
+  prod_network:
+    external: true
+  default:
+    name: tierra-viva_staging_default

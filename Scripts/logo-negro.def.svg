@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 2048 2048" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-miterlimit:4.47674;">
+    <g transform="matrix(1.06762,0,0,1,-67.6222,90)">
+        <g id="Livello1">
+            <path d="M1614.02,845.598L1700,950L1000,1800L300,950L396.432,832.904M540,660L1000,100L1460,660" style="fill:none;stroke:black;stroke-width:35.45px;"/>
+        </g>
+        <g>
+            <g transform="matrix(1.14548,0,0,1.14548,484.535,-468.375)">
+                <g id="Livello18">
+                    <path d="M319.05,638.364L450,470L580.95,638.364C549.757,676.006 502.658,700 450,700C397.342,700 350.243,676.006 319.05,638.364ZM349.494,636.802C375.909,661.175 411.247,675.993 450,675.993C488.753,675.993 524.091,661.175 550.506,636.802L450,507.58L349.494,636.802Z"/>
+                </g>
+            </g>
+            <g>
+                <g transform="matrix(1,0,0,0.52381,0,152.381)">
+                    <g id="Livello21">
+                        <path d="M1000,320L1000,472.727" style="fill:none;stroke:black;stroke-width:32.7px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                    </g>
+                </g>
+                <g transform="matrix(0.89819,0.439607,-0.206964,0.422862,96.3951,-259.323)">
+                    <g id="Livello211" serif:id="Livello21">
+                        <path d="M1008,298.445L1007.24,488.421" style="fill:none;stroke:black;stroke-width:34.26px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                    </g>
+                </g>
+                <g transform="matrix(-0.89819,0.439607,0.206964,0.422862,1901.96,-264.923)">
+                    <g id="Livello212" serif:id="Livello21">
+                        <path d="M1008.98,310.662L1008.22,500.639" style="fill:none;stroke:black;stroke-width:34.26px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+        <g>
+            <g>
+                <g transform="matrix(1,0,0,1,2.5,-5)">
+                    <g transform="matrix(1,0,0,1,-2.5,5)">
+                        <g id="Livello2">
+                            <path d="M1000,530L920,530L907.645,535.148C887.134,543.694 873.18,563.059 871.564,585.22C869.947,607.382 880.943,628.566 899.997,639.998L900,640L858.72,693.893" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(1,0,0,1,-2.5,5)">
+                        <path d="M840,1150L840,1150.16L870.844,957.264C876.119,924.272 904.58,900 937.992,900L1000,900" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                    </g>
+                    <g>
+                        <g transform="matrix(-1,0,0,1,1997.17,0.322375)">
+                            <path d="M1049.39,632.787C1049.39,632.787 1032.35,486.084 1219.67,404.678" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                        <g transform="matrix(1,0,0,1,-2.17054,0.322375)">
+                            <path d="M1049.39,632.787C1049.39,632.787 1032.35,486.084 1219.67,404.678" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(-1,0,0,0.708333,2005,126.042)">
+                        <g id="Livello3">
+                            <path d="M1137.5,775L1207.5,705L1207.5,605L1307.5,535" style="fill:none;stroke:black;stroke-width:30.35px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(1,0,0,0.708333,-10,126.042)">
+                        <g id="Livello31" serif:id="Livello3">
+                            <path d="M1137.5,775L1207.5,705L1207.5,605L1307.5,535" style="fill:none;stroke:black;stroke-width:30.35px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(-1.25,0,0,0.947368,2260,47.3684)">
+                        <path d="M1121.89,694.167C1121.89,694.167 1121.55,722.475 1121.16,754.96C1120.45,812.921 1095.94,865.04 1058.32,888.55C1047.7,895.188 1040,900 1040,900" style="fill:none;stroke:black;stroke-width:23.76px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                    </g>
+                    <g id="Livello7">
+                        <g transform="matrix(-0.984975,0,0,1,1982.47,5)">
+                            <path d="M1162.44,1150C1162.44,1150 1208.7,1370.08 1032.5,1400L1000,1400" style="fill:none;stroke:black;stroke-width:26.8px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                        <g transform="matrix(0.984975,0,0,1,12.5254,5)">
+                            <path d="M1162.44,1150.16C1162.44,1150.16 1208.7,1370.08 1032.5,1400L1000,1400" style="fill:none;stroke:black;stroke-width:26.8px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(1,0,0,1,-2.36878,-5)">
+                        <g id="Livello17">
+                            <path d="M880,1010L999.869,1010" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(1.16667,0,0,1,-169.035,95)">
+                        <g id="Livello171" serif:id="Livello17">
+                            <path d="M880,1010L999.888,1010" style="fill:none;stroke:black;stroke-width:24.35px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g id="Livello172" serif:id="Livello17" transform="matrix(1.16667,0,0,1,-166.667,190)">
+                        <path d="M860.714,1015L997.857,1015" style="fill:none;stroke:black;stroke-width:24.35px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                    </g>
+                    <g transform="matrix(1.16667,0,0,1,-169.167,295)">
+                        <g id="Livello173" serif:id="Livello17">
+                            <path d="M871.429,1010L1000,1010" style="fill:none;stroke:black;stroke-width:24.35px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(0.58125,0,0,0.533333,765,-169)">
+                        <g id="Livello20">
+                            <path d="M330,1620L470,1620L560,1770L470,1920L330,1920L240,1770L330,1620ZM353.108,1671.56L294.046,1770L353.108,1868.44L446.892,1868.44L505.954,1770L446.892,1671.56L353.108,1671.56Z"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(-1,0,0,1,2000,0)">
+                        <g id="Livello6">
+                            <path d="M1102.5,645L1002.5,645" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                </g>
+                <g transform="matrix(-0.794173,-0.00106315,-0.00124005,0.926316,1780.49,-119.025)">
+                    <g id="Livello311" serif:id="Livello31">
+                        <g>
+                            <g transform="matrix(1.26686,0,0,1,-499.589,-10)">
+                                <path d="M1310,890L1900,810C1900,810 1901.9,840.763 1904.04,875.31C1907.59,932.59 1880.94,986.683 1836.58,1012.23C1789.16,1039.53 1736.25,1070 1736.25,1070C1736.25,1070 1721.93,1093.24 1704.96,1120.79C1672.51,1173.46 1613.68,1194.43 1561.33,1172C1533.55,1160.09 1510,1150 1510,1150L1310,1000L1310,890Z" style="fill:none;stroke:black;stroke-width:27.42px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                            <g id="Livello11" serif:id="Livello1">
+                                <path d="M1160,940L1700,1060" style="fill:none;stroke:black;stroke-width:30.97px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                            <g id="Livello22" serif:id="Livello2">
+                                <path d="M1390,990L1490,1160" style="fill:none;stroke:black;stroke-width:30.97px;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                            <g id="Livello32" serif:id="Livello3">
+                                <path d="M1470,1000L1900,800" style="fill:none;stroke:black;stroke-width:30.97px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+            <g transform="matrix(-1,0,0,1,2000,0)">
+                <g transform="matrix(1,0,0,1,2.5,-5)">
+                    <g id="Livello23" serif:id="Livello2">
+                        <g transform="matrix(-1,0,0,1,2355,-114.279)">
+                            <path d="M1708.56,1268.83L1697.5,1259.28L1457.5,1029.28L1557.5,1029.28L1817.5,1269.28" style="fill:none;stroke:black;stroke-width:26.59px;stroke-miterlimit:1.5;"/>
+                        </g>
+                        <g transform="matrix(1,0,0,1,-360,-114.279)">
+                            <path d="M1708.56,1268.83L1697.5,1259.28L1457.5,1029.28L1557.5,1029.28L1817.5,1269.28" style="fill:none;stroke:black;stroke-width:26.59px;stroke-miterlimit:1.5;"/>
+                        </g>
+                        <g transform="matrix(1,0,0,1,-2.5,5)">
+                            <path d="M1000,530L920,530L907.645,535.148C887.134,543.694 873.18,563.059 871.564,585.22C869.947,607.382 880.943,628.566 899.997,639.998L900,640L858.72,693.893" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(1,0,0,1,-2.5,5)">
+                        <path d="M840,1150L840,1150.16L870.844,957.264C876.119,924.272 904.58,900 937.992,900L1000,900" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                    </g>
+                    <g transform="matrix(-1.25,0,0,0.947368,2260,47.3684)">
+                        <path d="M1121.89,694.167C1121.89,694.167 1121.55,722.475 1121.16,754.96C1120.45,812.921 1095.94,865.04 1058.32,888.55C1047.7,895.188 1040,900 1040,900" style="fill:none;stroke:black;stroke-width:23.76px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                    </g>
+                    <g transform="matrix(1,0,0,1,-2.36878,-5)">
+                        <g id="Livello174" serif:id="Livello17">
+                            <path d="M880,1010L999.869,1010" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(1.16667,0,0,1,-169.035,95)">
+                        <g id="Livello175" serif:id="Livello17">
+                            <path d="M880,1010L999.888,1010" style="fill:none;stroke:black;stroke-width:24.35px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g id="Livello176" serif:id="Livello17" transform="matrix(1.16667,0,0,1,-166.667,190)">
+                        <path d="M860.714,1015L997.857,1015" style="fill:none;stroke:black;stroke-width:24.35px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                    </g>
+                    <g transform="matrix(1.16667,0,0,1,-169.167,295)">
+                        <g id="Livello177" serif:id="Livello17">
+                            <path d="M871.429,1010L1000,1010" style="fill:none;stroke:black;stroke-width:24.35px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                    <g transform="matrix(-1,0,0,1,2000,0)">
+                        <g id="Livello61" serif:id="Livello6">
+                            <path d="M1102.5,645L1002.5,645" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                </g>
+                <g transform="matrix(-0.794173,-0.00106315,-0.00124005,0.926316,1780.49,-119.025)">
+                    <g id="Livello312" serif:id="Livello31">
+                        <g>
+                            <g transform="matrix(1.26686,0,0,1,-499.589,-10)">
+                                <path d="M1310,890L1900,810C1900,810 1901.9,840.763 1904.04,875.31C1907.59,932.59 1880.94,986.683 1836.58,1012.23C1789.16,1039.53 1736.25,1070 1736.25,1070C1736.25,1070 1721.93,1093.24 1704.96,1120.79C1672.51,1173.46 1613.68,1194.43 1561.33,1172C1533.55,1160.09 1510,1150 1510,1150L1310,1000L1310,890Z" style="fill:none;stroke:black;stroke-width:27.42px;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                            <g id="Livello12" serif:id="Livello1">
+                                <path d="M1160,940L1700,1060" style="fill:none;stroke:black;stroke-width:30.97px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                            <g id="Livello24" serif:id="Livello2">
+                                <path d="M1390,990L1490,1160" style="fill:none;stroke:black;stroke-width:30.97px;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                            <g id="Livello33" serif:id="Livello3">
+                                <path d="M1470,1000L1900,800" style="fill:none;stroke:black;stroke-width:30.97px;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;"/>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+        <g id="radici--" serif:id="radici ," transform="matrix(1.06383,0,0,1,-63.8298,-109.836)">
+            <g>
+                <g transform="matrix(-1,0,0,1,2000,-87.7469)">
+                    <g transform="matrix(0.789474,0,0,1,317.368,2.27374e-13)">
+                        <g id="Livello5">
+                            <path d="M1067.08,1347.58L1471.91,1347.58" style="fill:none;stroke:black;stroke-width:28.96px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                        </g>
+                    </g>
+                </g>
+                <g id="Livello321" serif:id="Livello32" transform="matrix(0.94,0,0,1,60,109.836)">
+                    <path d="M610,1150L610,1300" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                </g>
+                <g id="Livello331" serif:id="Livello33" transform="matrix(0.94,0,0,1,60,109.836)">
+                    <path d="M710,1150L710,1280L800,1390L800,1540" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                </g>
+                <g id="Livello35" transform="matrix(0.94,0,0,1,60,109.836)">
+                    <path d="M700,1400L755,1340" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                </g>
+                <g transform="matrix(0.94,0,0,1,60,109.836)">
+                    <path d="M960,1410L900,1470L900,1670" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                </g>
+            </g>
+            <g transform="matrix(-1,0,0,1,2000,0)">
+                <g transform="matrix(0.94,0,0,1.15789,60,-112.795)">
+                    <path d="M960,1410L900,1470L900,1625.91" style="fill:none;stroke:black;stroke-width:24.69px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                </g>
+            </g>
+            <g id="Livello351" serif:id="Livello35" transform="matrix(-0.94,0,0,1,1940,109.836)">
+                <path d="M700,1400L755,1340" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+            </g>
+            <g id="Livello322" serif:id="Livello32" transform="matrix(-0.94,0,0,1,1940,109.836)">
+                <path d="M610,1150L610,1320" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:round;stroke-miterlimit:1.5;"/>
+            </g>
+            <g transform="matrix(0.789474,0,0,1,317.368,-87.7469)">
+                <g id="Livello51" serif:id="Livello5">
+                    <path d="M1067.08,1347.58L1471.91,1347.58" style="fill:none;stroke:black;stroke-width:28.96px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+                </g>
+            </g>
+            <g id="Livello332" serif:id="Livello33" transform="matrix(-0.94,0,0,1,1940,109.836)">
+                <path d="M710,1150L710,1280L800,1390L800,1540" style="fill:none;stroke:black;stroke-width:26.59px;stroke-linecap:square;stroke-miterlimit:1.5;"/>
+            </g>
+            <g transform="matrix(0.94,0,0,1,60,109.836)">
+                <g id="Livello34">
+                    <path d="M1000,1400L1000,1780" style="fill:none;stroke:black;stroke-width:26.59px;stroke-miterlimit:1.5;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

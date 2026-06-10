@@ -1,0 +1,48 @@
+name: tierraviva-prod
+services:
+  backend-prod:
+    container_name: tierraviva-prod_backend
+    image: tierraviva-backend:prod
+    build:
+      context: ./tierraViva-backend
+      dockerfile: Dockerfile.prod
+    env_file: .env.prod
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    environment:
+      - STATIC_ROOT=/app/staticfiles
+      - MEDIA_ROOT=/app/media
+      - ENVIRONMENT=prod
+    restart: always
+    networks:
+      - default
+      - prod_network
+
+  frontend-prod:
+    container_name: tierraviva-prod_frontend
+    image: tierraviva-frontend:prod
+    build:
+      context: ./tierraViva-front
+      dockerfile: Dockerfile.prod
+    volumes:
+      - ./tierraViva-front:/app:Z
+      - /app/node_modules
+      - /app/.next
+    env_file: .env.prod
+    restart: always
+    networks:
+      - default
+      - prod_network
+
+volumes:
+  static_volume:
+    name: tierraviva-prod_static_volume
+  media_volume:
+    name: tierraviva-prod_media_volume
+
+networks:
+  prod_network:
+    external: true
+  default:
+    name: tierraviva_prod_default
