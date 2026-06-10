@@ -40,7 +40,7 @@ export default function AnimalFolders({ folders, title = "Galerías Exclusivas" 
                         <div className="aspect-video relative overflow-hidden bg-muted group-hover:scale-105 transition-all duration-700">
                             {folder.cover_image_url ? (
                                 <img 
-                                    src={optimizeImage(folder.cover_image_url, true)} 
+                                    src={optimizeImage(folder.cover_image_url)} 
                                     alt={folder.name}
                                     className={`object-cover w-full h-full transition-all duration-1000 ${
                                         folder.is_locked 
@@ -101,7 +101,7 @@ export default function AnimalFolders({ folders, title = "Galerías Exclusivas" 
                                         onClick={() => setSelectedItem(item)}
                                     >
                                         <img 
-                                            src={optimizeImage(item.file_url, true)} 
+                                            src={optimizeImage(item.file_url)} 
                                             alt="Gallery Item" 
                                             className="object-cover w-full h-full transition-transform hover:scale-105"
                                         />

@@ -23,7 +23,7 @@ const AnimalCard = ({ animal, index = 0 }: AnimalCardProps) => {
             <div className="aspect-[4/5] relative rounded-[3rem] overflow-hidden bg-card border-2 border-border/20 shadow-2xl transition-all duration-700">
                 {animal.image_url ? (
                     <img
-                        src={optimizeImage(animal.image_url, true)}
+                        src={optimizeImage(animal.image_url)}
                         alt={animal.name}
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     />
