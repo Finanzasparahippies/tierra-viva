@@ -25,14 +25,10 @@ services:
     image: tierraviva-frontend:staging
     build:
       context: ./tierraViva-front
-      dockerfile: Dockerfile
-    volumes:
-      - ./tierraViva-front:/app:Z
-      - /app/node_modules
-      - /app/.next
+      dockerfile: Dockerfile.prod
+      args:
+        - NEXT_PUBLIC_API_URL=https://staging.tierraviva.com.mx/api
     env_file: .env.staging
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
     restart: always
     networks:
       - default
