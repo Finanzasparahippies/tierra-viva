@@ -35,7 +35,9 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Determine whether to use Stripe real or mock
         use_mock = False
-        if not getattr(settings, 'TESTING', False):
+        if getattr(settings, 'TESTING', False):
+            use_mock = True
+        else:
             stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
             webhook_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', '')
             

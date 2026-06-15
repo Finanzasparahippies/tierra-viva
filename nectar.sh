@@ -27,10 +27,10 @@ run_django_cmd_staging() {
 
 # Helper function to run Django commands in prod (using exec if running, run --rm if not)
 run_django_cmd_prod() {
-    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^backend$"; then
-        docker compose -f docker-compose.prod.yml exec backend python manage.py "$@"
+    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^backend-prod$"; then
+        docker compose -f docker-compose.prod.yml exec backend-prod python manage.py "$@"
     else
-        docker compose -f docker-compose.prod.yml run --rm backend python manage.py "$@"
+        docker compose -f docker-compose.prod.yml run --rm backend-prod python manage.py "$@"
     fi
 }
 
@@ -38,7 +38,7 @@ run_django_cmd_prod() {
 remove_conflicting_containers() {
     local container_names=("$@")
     for container in "${container_names[@]}"; do
-        if docker ps -a --format '{{.Name}}' | grep -q "^${container}$"; then
+        if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
             echo "Warning: Container '${container}' already exists (possibly from a different or older Docker Compose project/run)."
             echo "Removing existing container '${container}' to prevent naming conflicts..."
             docker rm -f "${container}"
@@ -91,6 +91,11 @@ show_help() {
     echo "  makemigrations-prod     - Generate database migrations (Prod)"
     echo "  migrate-prod            - Run database migrations in prod"
     echo "  collectstatic           - Compile static assets in prod"
+    echo "  createsuperuser-prod    - Create admin superuser in prod"
+    echo "  shell-prod              - Open backend python shell in prod"
+    echo "  test-prod               - Run backend tests (Prod)"
+    echo "  typecheck-prod          - Run TypeScript type-check in Prod frontend"
+    echo "  buildcheck-prod         - Run Next.js build check in Prod frontend"
     echo "  certbot                 - Request Let's Encrypt SSL certificate"
     echo "  clean                   - Safe Docker and VPS cleanup"
     echo "  help                    - Show this help screen"
@@ -99,7 +104,7 @@ show_help() {
 case $COMMAND in
     dev)
         echo "Starting TIERRA VIVA Dev Environment..."
-        remove_conflicting_containers ambar_dev_db ambar_dev_backend ambar_dev_frontend ambar_dev_nginx
+        remove_conflicting_containers tierraviva-dev_backend tierraviva-dev_frontend tierraviva-dev_nginx
         docker compose up -d --build "$@"
         ;;
     stop)
@@ -149,7 +154,7 @@ case $COMMAND in
         ;;
     up-staging)
         echo "Starting TIERRA VIVA Staging Environment..."
-        remove_conflicting_containers ambar_staging_backend ambar_staging_frontend ambar_staging_nginx ambar_staging_autostop
+        remove_conflicting_containers tierraviva-staging_backend tierraviva-staging_frontend tierraviva-staging_nginx tierraviva-staging_autostop
         docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build "$@"
         ;;
     down-staging|stop-staging)
@@ -200,7 +205,7 @@ case $COMMAND in
         ;;
     up-prod)
         echo "Starting TIERRA VIVA Production Environment..."
-        remove_conflicting_containers ambar_backend ambar_frontend
+        remove_conflicting_containers tierraviva-prod_backend tierraviva-prod_frontend
         docker compose -f docker-compose.prod.yml up -d "$@"
         ;;
     down-prod)
@@ -224,11 +229,28 @@ case $COMMAND in
     migrate-prod)
         run_django_cmd_prod migrate "$@"
         ;;
+    createsuperuser-prod)
+        run_django_cmd_prod createsuperuser "$@"
+        ;;
+    shell-prod)
+        run_django_cmd_prod shell "$@"
+        ;;
+    test-prod)
+        run_django_cmd_prod test "$@"
+        ;;
+    typecheck-prod)
+        echo "Running TypeScript type-check for Prod frontend..."
+        docker compose -f docker-compose.prod.yml run --rm frontend-prod npx tsc --noEmit "$@"
+        ;;
+    buildcheck-prod)
+        echo "Running Next.js build-check for Prod frontend..."
+        docker compose -f docker-compose.prod.yml run --rm frontend-prod npm run build "$@"
+        ;;
     collectstatic)
         echo "Running collectstatic..."
-        if docker compose ps --format json | grep -q "ambar_dev_backend"; then
+        if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
             run_django_cmd_dev collectstatic --no-input "$@"
-        elif docker compose --env-file .env.staging -f docker-compose.staging.yml ps --format json | grep -q "ambar_staging_backend"; then
+        elif docker compose --env-file .env.staging -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^backend-staging$"; then
             run_django_cmd_staging collectstatic --no-input "$@"
         else
             run_django_cmd_prod collectstatic --no-input "$@"
@@ -260,21 +282,14 @@ case $COMMAND in
         echo "5. Removing Docker build cache..."
         docker builder prune -f
         
-        echo "6. Checking for legacy/conflicting Docker Compose project 'ms-ambar'..."
-        if docker compose -p ms-ambar ps -q &>/dev/null || [ -n "$(docker ps -a --filter 'label=com.docker.compose.project=ms-ambar' -q)" ]; then
-            echo "   Stopping and removing legacy 'ms-ambar' project containers and networks..."
-            docker compose -p ms-ambar down
-        else
-            echo "   No legacy 'ms-ambar' project containers found."
-        fi
-        
+
         if command -v journalctl &> /dev/null; then
-            echo "7. Vacuuming system logs (journald) to 100MB..."
+            echo "6. Vacuuming system logs (journald) to 100MB..."
             sudo journalctl --vacuum-size=100M 2>/dev/null || echo "   (Skip: sudo privileges required to vacuum logs)"
         fi
         
         if command -v apt-get &> /dev/null; then
-            echo "8. Cleaning APT package cache..."
+            echo "7. Cleaning APT package cache..."
             sudo apt-get autoclean -y 2>/dev/null || echo "   (Skip: sudo privileges required to clean APT cache)"
         fi
         

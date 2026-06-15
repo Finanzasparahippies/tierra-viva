@@ -8,8 +8,15 @@ export function CustomCursor() {
     const [isVisible, setIsVisible] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     const [isText, setIsText] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+
         const moveCursor = (e: MouseEvent) => {
             if (!isVisible) setIsVisible(true);
             
@@ -30,7 +37,7 @@ export function CustomCursor() {
             const target = e.target as HTMLElement;
             
             // Check for interactive pointer elements (buttons, links)
-            const isPointer = (
+            const isPointer = !!(
                 target.tagName === 'A' || 
                 target.tagName === 'BUTTON' || 
                 target.closest('button') || 
@@ -69,42 +76,101 @@ export function CustomCursor() {
             document.removeEventListener("mouseover", handleMouseOver, true);
             document.removeEventListener("mouseout", handleMouseOut, true);
         };
-    }, [isVisible]);
+    }, [isVisible, mounted]);
 
     useEffect(() => {
+        if (!mounted) return;
         document.body.style.cursor = "none";
         return () => {
             document.body.style.cursor = "auto";
         };
-    }, []);
+    }, [mounted]);
 
-    if (typeof window === "undefined") return null;
+    if (!mounted) return null;
 
     return (
         <div className={`pointer-events-none fixed inset-0 z-[10000] ${isVisible ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}>
+            {/* Custom Wing Flutter Animation Styles */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes wing-flutter-left {
+                    0%, 100% { transform: rotate(-30deg) scaleX(1); }
+                    50% { transform: rotate(-60deg) scaleX(0.7); }
+                }
+                @keyframes wing-flutter-right {
+                    0%, 100% { transform: rotate(30deg) scaleX(1); }
+                    50% { transform: rotate(60deg) scaleX(0.7); }
+                }
+                .animate-wing-left {
+                    animation: wing-flutter-left 0.12s infinite ease-in-out;
+                }
+                .animate-wing-right {
+                    animation: wing-flutter-right 0.12s infinite ease-in-out;
+                }
+            `}} />
+
             {/* Main Cursor Element */}
             <div 
                 ref={cursorDotRef}
-                className={`fixed top-0 left-0 transition-all duration-200 ease-out z-10 ${
-                    isText 
-                    ? "w-[2px] h-6 bg-[#0d0f36] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-sm" 
-                    : "w-1.5 h-1.5 bg-[#69d2cd] rounded-full -translate-x-1/2 -translate-y-1/2"
-                }`}
-            />
+                className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out z-10"
+            >
+                {isText ? (
+                    // Standard text cursor bar when hovering inputs/textareas
+                    <div className="w-[2px] h-6 bg-[#1b4332] rounded-full shadow-sm" />
+                ) : (
+                    // Bee Cursor
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 select-none pointer-events-none drop-shadow-md">
+                        {/* Left Wing */}
+                        <ellipse 
+                            cx="9" 
+                            cy="8" 
+                            rx="3" 
+                            ry="5" 
+                            fill="#e0f2fe" 
+                            stroke="#7dd3fc" 
+                            strokeWidth="0.5" 
+                            opacity="0.85" 
+                            className="animate-wing-left"
+                            style={{ transformOrigin: "12px 13px" }}
+                        />
+                        {/* Right Wing */}
+                        <ellipse 
+                            cx="14" 
+                            cy="8" 
+                            rx="3" 
+                            ry="5" 
+                            fill="#e0f2fe" 
+                            stroke="#7dd3fc" 
+                            strokeWidth="0.5" 
+                            opacity="0.85" 
+                            className="animate-wing-right"
+                            style={{ transformOrigin: "12px 13px" }}
+                        />
+                        {/* Body (Bee) */}
+                        <ellipse cx="12" cy="13" rx="5.5" ry="4" fill="#fbbf24" stroke="#d97706" strokeWidth="0.5" />
+                        {/* Stripes */}
+                        <path d="M10 9.5a4 4 0 0 0 0 7M13 9.5a4 4 0 0 0 0 7" stroke="#1e293b" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+                        {/* Stinger */}
+                        <polygon points="17.5,13 20.5,13 17.5,14" fill="#1e293b" />
+                        {/* Eye */}
+                        <circle cx="8.5" cy="12.2" r="0.8" fill="#1e293b" />
+                    </svg>
+                )}
+            </div>
+
             {/* Outer Ring / Interaction Feedback */}
             <div 
                 ref={cursorOutlineRef}
                 className={`fixed top-0 left-0 rounded-full -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out border-2 ${
                     isText
-                    ? "w-4 h-8 border-[#0d0f36]/10 opacity-50 scale-x-50"
+                    ? "w-4 h-8 border-[#1b4332]/10 opacity-50 scale-x-50"
                     : isHovering 
-                        ? "w-16 h-16 bg-[#69d2cd]/10 border-[#69d2cd] shadow-[0_0_20px_rgba(105,210,205,0.4)]" 
-                        : "w-10 h-10 border-[#0d0f36]/20 dark:border-white/20"
+                        ? "w-16 h-16 bg-[#40916c]/10 border-[#40916c] shadow-[0_0_20px_rgba(64,145,108,0.4)]" 
+                        : "w-10 h-10 border-[#1b4332]/20 dark:border-white/20"
                 }`}
             >
                 {isHovering && !isText && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-1 h-1 bg-[#69d2cd] rounded-full animate-ping" />
+                        <div className="w-1.5 h-1.5 bg-[#40916c] rounded-full animate-ping" />
                     </div>
                 )}
             </div>

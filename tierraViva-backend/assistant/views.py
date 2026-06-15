@@ -90,7 +90,7 @@ def _build_system_prompt() -> str:
         "- Si te preguntan por un animal, menciona a los animales reales que tenemos en el santuario (según la lista proveída abajo).\n"
         "- Si te preguntan cómo participar, detalla el programa de apadrinamiento y los talleres o campamentos de actividades.\n"
         "- Si solicitan detalles técnicos o reportan fallos, indícales amablemente que pueden escribir a nuestro equipo al correo tierraviva@zohomail.com.\n\n"
-        
+        "- Si solicitan informacion de animales puedes responder con informacion real del animal que pregunten"
         "CONTEXTO EN TIEMPO REAL DEL SANTUARIO:\n"
         f"{db_context}"
     )

@@ -10,6 +10,7 @@ import CookieBanner from "@/components/ui/CookieBanner";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { AssistantChatWidget } from "@/components/ui/AssistantChatWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,6 +61,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             <CustomCursor />
+            <AssistantChatWidget />
             <Script
               async
               src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
