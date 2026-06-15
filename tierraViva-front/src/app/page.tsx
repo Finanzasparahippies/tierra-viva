@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="space-y-40 pb-40">
       {/* Cinematic Hero Section - Monochrome Fusion Style */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-white dark:bg-[#0d0f36]">
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden bg-background">
         {/* Background Sketch Decorative Elements */}
         <div className="absolute inset-0 pointer-events-none opacity-5">
            <svg width="100%" height="100%" className="absolute top-0 left-0">
@@ -17,11 +17,11 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-6xl space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border-2 border-[#0d0f36] bg-white text-[#0d0f36] text-[10px] font-black uppercase tracking-[0.4em] shadow-[4px_4px_0px_0px_#69d2cd]">
+          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border-2 border-foreground bg-background text-foreground text-[10px] font-black uppercase tracking-[0.4em] shadow-[4px_4px_0px_0px_var(--primary)]">
             <Sparkles className="w-4 h-4 text-primary" /> Santuario Tierra Viva
           </div>
           
-          <h1 className="text-[12vw] md:text-[10vw] font-black tracking-tighter leading-[0.75] italic text-[#0d0f36] dark:text-white">
+          <h1 className="text-[12vw] md:text-[10vw] font-black tracking-tighter leading-[0.75] italic text-foreground">
             Salvaguarda <br /> 
             <span className="text-primary sketch-underline">la Vida</span>
           </h1>
@@ -32,12 +32,12 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-8 pt-12">
             <Link href="/animals">
-              <Button size="lg" className="h-20 px-12 rounded-[2rem] text-xl shadow-[8px_8px_0px_0px_#0d0f36] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+              <Button size="lg" className="h-20 px-12 rounded-[2rem] text-xl shadow-[8px_8px_0px_0px_var(--foreground)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                 <Heart className="w-6 h-6 mr-3" /> Cuidar un Animal
               </Button>
             </Link>
             <Link href="/shop">
-              <Button variant="outline" size="lg" className="h-20 px-12 rounded-[2rem] text-xl shadow-[8px_8px_0px_0px_#69d2cd] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+              <Button variant="outline" size="lg" className="h-20 px-12 rounded-[2rem] text-xl shadow-[8px_8px_0px_0px_var(--primary)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                 <Store className="w-6 h-6 mr-3" /> Tienda Solidaria
               </Button>
             </Link>
@@ -62,7 +62,7 @@ export default function Home() {
             { title: "Comercio Justo", desc: "Fortalecemos la economía local con productos orgánicos.", icon: "🌾", accent: "#294380" },
             { title: "Sostenibilidad", desc: "Promovemos un estilo de vida consciente y respetuoso.", icon: "🍃", accent: "#b9f1d6" }
           ].map((item, i) => (
-            <div key={i} className="group relative p-12 border-4 border-[#0d0f36] rounded-[4rem] bg-white shadow-[12px_12px_0px_0px_#0d0f36] hover:translate-x-2 hover:translate-y-2 hover:shadow-none transition-all duration-500">
+            <div key={i} className="group relative p-12 border-4 border-foreground rounded-[4rem] bg-card text-card-foreground shadow-[12px_12px_0px_0px_var(--foreground)] hover:translate-x-2 hover:translate-y-2 hover:shadow-none transition-all duration-500">
               <div className="text-7xl mb-10 grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-110">
                 {item.icon}
               </div>
