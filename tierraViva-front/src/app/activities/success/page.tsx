@@ -6,7 +6,9 @@ import { CheckCircle2, Calendar, Ticket, ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
 
-export default function ActivitySuccessPage() {
+import { Suspense } from "react";
+
+function ActivitySuccessContent() {
     const searchParams = useSearchParams();
     const bookingId = searchParams.get('booking_id');
 
@@ -66,5 +68,17 @@ export default function ActivitySuccessPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ActivitySuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="container mx-auto px-4 py-24 max-w-2xl text-center">
+                <p className="text-muted-foreground animate-pulse">Cargando confirmación...</p>
+            </div>
+        }>
+            <ActivitySuccessContent />
+        </Suspense>
     );
 }
