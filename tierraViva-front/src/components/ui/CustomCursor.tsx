@@ -111,7 +111,7 @@ export function CustomCursor() {
             {/* Main Cursor Element */}
             <div 
                 ref={cursorDotRef}
-                className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out z-10"
+                className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50"
             >
                 {isText ? (
                     // Standard text cursor bar when hovering inputs/textareas
@@ -160,7 +160,7 @@ export function CustomCursor() {
             {/* Outer Ring / Interaction Feedback */}
             <div 
                 ref={cursorOutlineRef}
-                className={`fixed top-0 left-0 rounded-full -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-out border-2 ${
+                className={`fixed top-0 left-0 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none border-2 transition-[width,height,background-color,border-color,opacity] duration-300 ease-out ${
                     isText
                     ? "w-4 h-8 border-[#1b4332]/10 opacity-50 scale-x-50"
                     : isHovering 
