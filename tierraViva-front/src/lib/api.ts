@@ -10,6 +10,8 @@ const baseURL = isServer
     ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api")
     : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api");
 
+console.log(`[API] baseURL: ${baseURL} | isServer: ${isServer}`);
+
 const api = axios.create({
     baseURL,
     headers: {
