@@ -55,8 +55,6 @@
   --radius-lg: var(--radius);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
-  --animate-float: float 45s linear infinite;
-  --animate-float-reverse: float-reverse 55s linear infinite;
 }
 
 .dark {
@@ -79,7 +77,27 @@
 
 @keyframes float {
   0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
+  10%, 90% { opacity: 0.25; }
   100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+}
+
+@keyframes float-reverse {
+  0% { transform: translateY(100vh) rotate(360deg) scale(1.2); opacity: 0; }
+  10%, 90% { opacity: 0.25; }
+  100% { transform: translateY(-20vh) rotate(0deg) scale(0.8); opacity: 0; }
+}
+
+.animate-float {
+  animation: float 28s linear infinite;
+}
+.animate-float-slow {
+  animation: float 45s linear infinite;
+}
+.animate-float-fast {
+  animation: float 18s linear infinite;
+}
+.animate-float-reverse {
+  animation: float-reverse 35s linear infinite;
 }
 
 @keyframes draw {

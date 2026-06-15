@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 export function CustomCursor() {
     const cursorDotRef = useRef<HTMLDivElement>(null);
     const cursorOutlineRef = useRef<HTMLDivElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
     const [isHovering, setIsHovering] = useState(false);
     const [isText, setIsText] = useState(false);
     const [mounted, setMounted] = useState(false);
