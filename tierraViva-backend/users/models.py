@@ -47,10 +47,10 @@ class User(AbstractUser):
         from sponsorship.models import Sponsorship
         from shop.models import Order
         from activities.models import Booking
-        from django.db.models import Sum
+        from django.db.models import Sum, F
 
         sponsorship_total = Sponsorship.objects.filter(user=self, active=True).aggregate(Sum('amount'))['amount__sum'] or 0
-        shop_total = Order.objects.filter(user=self, paid=True).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        shop_total = Order.objects.filter(user=self, paid=True).aggregate(total=Sum(F('items__price') * F('items__quantity')))['total'] or 0
         booking_total = Booking.objects.filter(user=self, status="PAID").aggregate(Sum('total_price'))['total_price__sum'] or 0
         
         return float(sponsorship_total + shop_total + booking_total)

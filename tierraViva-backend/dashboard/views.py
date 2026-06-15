@@ -40,7 +40,7 @@ class AnalyticsOverview(APIView):
             # 3. Financial Metrics - Shop / Merch
             paid_orders = Order.objects.filter(paid=True)
             total_orders_count = paid_orders.count()
-            shop_sales = paid_orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+            shop_sales = paid_orders.aggregate(total=Sum(F('items__price') * F('items__quantity')))['total'] or 0
             shop_sales = float(shop_sales)
             
             # 4. Financial Metrics - Activities / Camps
@@ -79,7 +79,7 @@ class AnalyticsOverview(APIView):
                 s_sales = Order.objects.filter(
                     paid=True,
                     created_at__date=current_date.date()
-                ).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+                ).aggregate(total=Sum(F('items__price') * F('items__quantity')))['total'] or 0
                 s_sales = float(s_sales)
                 
                 # Sponsorship contributions on this date
