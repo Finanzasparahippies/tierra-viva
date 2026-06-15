@@ -26,7 +26,7 @@ services:
       context: ./tierraViva-front
       dockerfile: Dockerfile.prod
       args:
-        - NEXT_PUBLIC_API_URL=https://tierraviva.com.mx
+        - NEXT_PUBLIC_API_URL=https://tierraviva.com.mx/api
     volumes:
       - ./tierraViva-front:/app:Z
       - /app/node_modules
