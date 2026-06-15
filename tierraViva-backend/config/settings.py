@@ -309,6 +309,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'apps': {
             'handlers': ['console'],
             'level': 'DEBUG',
