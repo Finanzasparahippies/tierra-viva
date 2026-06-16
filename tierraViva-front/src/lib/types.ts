@@ -24,6 +24,7 @@ export interface User {
     email: string;
     first_name: string;
     last_name: string;
+    role: 'ADMIN' | 'FAMILY' | 'USER' | 'SPONSOR';
     is_active: boolean;
     is_staff: boolean;
     max_sponsorship_level?: number;
@@ -201,6 +202,95 @@ export interface Booking {
     status_display: string;
     stripe_payment_intent?: string;
     created_at: string;
+}
+
+export interface ServerSummary {
+    avg_response_time: number;
+    max_response_time: number;
+    avg_queries: number;
+    total_requests: number;
+}
+
+export interface HardwareStat {
+    percent: number;
+    used?: number;
+    total?: number;
+    cores?: number;
+    total_gb?: number;
+    used_gb?: number;
+}
+
+export interface DatabaseStat {
+    status: string;
+}
+
+export interface SystemStat {
+    uptime: string;
+}
+
+export interface SystemMetrics {
+    cpu: HardwareStat;
+    memory: HardwareStat;
+    disk: HardwareStat;
+    database: DatabaseStat;
+    system: SystemStat;
+}
+
+export interface AnalyticsOverviewData {
+    financials: {
+        gross_sales: number;
+        sponsorship_sales: number;
+        shop_sales: number;
+        activities_sales: number;
+    };
+    sponsorships: {
+        active_count: number;
+    };
+    shop: {
+        total_orders: number;
+        low_stock_count: number;
+        total_products: number;
+    };
+    activities: {
+        total_bookings: number;
+    };
+    rescues: {
+        total: number;
+        pending: number;
+        resolved: number;
+    };
+    ranch: {
+        total_animals: number;
+    };
+    charts: {
+        daily_sales: Array<{
+            date: string;
+            activities: number;
+            shop: number;
+            sponsorships: number;
+            total: number;
+        }>;
+    };
+    status: string;
+}
+
+export interface RescueRequest {
+    id: number;
+    user?: number;
+    email?: string;
+    animal_type: string;
+    animal_type_display: string;
+    other_species?: string;
+    description: string;
+    latitude: number;
+    longitude: number;
+    address: string;
+    phone: string;
+    status: 'PENDING_APPROVAL' | 'PENDING_RESCUE' | 'SCHEDULED' | 'RESCUED' | 'CANCELLED';
+    status_display: string;
+    photo?: string;
+    created_at: string;
+    updated_at: string;
 }
 
 

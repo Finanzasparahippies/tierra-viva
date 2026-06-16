@@ -261,4 +261,34 @@ export const subscribeNewsletter = async (email: string) => {
     return response.data;
 };
 
+export const getUserSponsorships = async () => {
+    const response = await api.get('/sponsorship/mine/', { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getAnalyticsOverview = async () => {
+    const response = await api.get('/dashboard/analytics/', { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getSystemMetrics = async () => {
+    const response = await api.get('/dashboard/system/', { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getUserOrders = async () => {
+    const response = await api.get('/orders/', { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getUserBookings = async () => {
+    const response = await api.get('/activities/bookings/', { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getUserRescues = async () => {
+    const response = await api.get('/rescues/', { headers: getAuthHeader() });
+    return response.data;
+};
+
 export default api;
