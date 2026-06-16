@@ -21,15 +21,13 @@ class RescueRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = RescueRequest.objects.all()
+        if not user.is_authenticated:
+            return RescueRequest.objects.none()
 
-        # If user is not Admin/Family, we only show their own requests 
-        # or we could show all with limited data. Given the user's requirement 
-        # for privacy, let's limit the detailed fields for non-admins.
-        # For now, let's return all and handle field invisibility in the serializer 
-        # or by using different serializers.
-        
-        return queryset
+        if user.is_staff or user.role == 'ADMIN' or user.role == 'FAMILY':
+            return RescueRequest.objects.all()
+
+        return RescueRequest.objects.filter(user=user)
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:

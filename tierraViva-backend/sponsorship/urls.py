@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CreateCheckoutSessionView, stripe_webhook, RanchUpdateListView, SponsorshipTierListView, RanchUpdateTagListView
+from .views import CreateCheckoutSessionView, stripe_webhook, RanchUpdateListView, SponsorshipTierListView, RanchUpdateTagListView, UserSponsorshipsListView
 
 urlpatterns = [
     path('tiers/', SponsorshipTierListView.as_view(), name='sponsorship-tiers'),
@@ -7,4 +7,5 @@ urlpatterns = [
     path('webhook/', stripe_webhook, name='stripe-webhook'),
     path('updates/', RanchUpdateListView.as_view(), name='ranch-updates'),
     path('tags/', RanchUpdateTagListView.as_view(), name='ranch-tags'),
+    path('mine/', UserSponsorshipsListView.as_view(), name='user-sponsorships'),
 ]

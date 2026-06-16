@@ -10,7 +10,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from .models import SponsorshipTier, Sponsorship, RanchUpdate, RanchUpdateTag
 from .utils import get_checkout_session
-from .serializers import RanchUpdateSerializer, SponsorshipTierSerializer, RanchUpdateTagSerializer
+from .serializers import RanchUpdateSerializer, SponsorshipTierSerializer, RanchUpdateTagSerializer, SponsorshipSerializer
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -197,4 +197,13 @@ class RanchUpdateListView(APIView):
             
         updates = queryset.distinct().order_by('-created_at')
         serializer = RanchUpdateSerializer(updates, many=True)
+        return Response(serializer.data)
+
+
+class UserSponsorshipsListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        sponsorships = Sponsorship.objects.filter(user=request.user, active=True)
+        serializer = SponsorshipSerializer(sponsorships, many=True)
         return Response(serializer.data)

@@ -23,10 +23,20 @@ class SponsorshipTierSerializer(serializers.ModelSerializer):
 class SponsorshipSerializer(serializers.ModelSerializer):
     tier_name = serializers.ReadOnlyField(source='tier.name')
     animal_name = serializers.ReadOnlyField(source='animal.name')
+    animal_image_url = serializers.SerializerMethodField()
+    tier_price = serializers.ReadOnlyField(source='tier.price')
 
     class Meta:
         model = Sponsorship
         fields = "__all__"
+
+    def get_animal_image_url(self, obj):
+        if obj.animal and obj.animal.image:
+            url = obj.animal.image.url
+            if url.startswith('http://'):
+                url = url.replace('http://', 'https://')
+            return url
+        return None
 
 class RanchUpdateImageSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
