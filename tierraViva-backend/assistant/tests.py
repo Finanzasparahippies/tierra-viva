@@ -28,7 +28,7 @@ class AssistantAppTests(TestCase):
 
         response = self.client.post(self.chat_url, {
             "messages": [{"role": "user", "content": "Hola"}]
-        })
+        }, format="json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["reply"], "¡Hola! Soy el asistente de Tierra Viva.")
         mock_client.chat.completions.create.assert_called_once()

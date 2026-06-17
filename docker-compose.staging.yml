@@ -38,26 +38,6 @@ services:
       - default
       - prod_network
 
-  nginx-staging:
-    container_name: tierraviva-staging_nginx
-    image: tierraviva-nginx:staging
-    build:
-      context: ./docker/nginx
-      dockerfile: Dockerfile
-    ports:
-      - "3081:80"
-    volumes:
-      - ./docker/nginx/staging.conf:/etc/nginx/default.conf.template:Z
-      - static_volume_staging:/app/staticfiles
-      - media_volume_staging:/app/media
-    depends_on:
-      - backend-staging
-      - frontend-staging
-    restart: always
-    networks:
-      - default
-      - prod_network
-
   auto-stop-staging:
     container_name: tierraviva-staging_autostop
     image: docker:cli

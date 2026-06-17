@@ -101,6 +101,7 @@ class AssistantChatView(APIView):
     def post(self, request):
         api_key = getattr(settings, 'GROQ_API_KEY', '') or ''
         if not api_key:
+            logger.warning("GROQ_API_KEY is not configured in Django settings. Virtual assistant IA connection disabled.")
             return Response({
                 "reply": "Hola, gracias por contactarnos. Por el momento el asistente virtual no tiene configurada su conexión de IA. Por favor, vuelve a intentar más tarde o escríbenos directamente por redes sociales."
             }, status=status.HTTP_200_OK)
@@ -122,6 +123,8 @@ class AssistantChatView(APIView):
             # Format history for Groq
             groq_messages = [{"role": "system", "content": _build_system_prompt()}]
             for msg in messages_input[-10:]: # Keep last 10 messages for context
+                if not isinstance(msg, dict):
+                    continue
                 role = msg.get('role', 'user')
                 content = msg.get('content', '')
                 if role in ['user', 'assistant', 'system']:
