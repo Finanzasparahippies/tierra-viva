@@ -7,15 +7,15 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { MapPin, Phone, MessageSquare, Info, ShieldCheck, HeartPulse } from "lucide-react";
+import { MapPin, Phone, MessageSquare, Info, ShieldCheck, HeartPulse, Mail, MessageCircle } from "lucide-react";
 import { createRescueRequest } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import Swal from "sweetalert2";
@@ -151,7 +151,7 @@ export default function RescuePage() {
                     Ayuda a un Animal en <span className="text-primary italic">Peligro</span>
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                    ¿Tienes abejas en tu domicilio o algún animal que necesite ser rescatado? 
+                    ¿Tienes abejas en tu domicilio o algún animal que necesite ser rescatado?
                     Usa nuestro mapa para pinear tu ubicación y organizaremos una visita profesional.
                 </p>
             </header>
@@ -166,9 +166,9 @@ export default function RescuePage() {
                         <CardDescription>Haz clic en el mapa para marcar el punto exacto de la emergencia</CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 h-[500px] relative z-10">
-                        <MapContainer 
-                            center={[29.0730, -110.9559]} 
-                            zoom={13} 
+                        <MapContainer
+                            center={[29.0730, -110.9559]}
+                            zoom={13}
                             className="h-full w-full"
                         >
                             <TileLayer
@@ -201,7 +201,7 @@ export default function RescuePage() {
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                             <div className="space-y-2">
                                 <label className="text-sm font-black uppercase tracking-widest text-primary/60">Animal a Rescatar</label>
-                                <Select 
+                                <Select
                                     onValueChange={(val) => setValue("animal_type", val)}
                                     defaultValue="BEES"
                                 >
@@ -221,9 +221,9 @@ export default function RescuePage() {
                             {othersEnabled && (
                                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                                     <label className="text-sm font-black uppercase tracking-widest text-primary/60">Especificar Especie</label>
-                                    <Input 
-                                        {...register("other_species")} 
-                                        placeholder="Ej. Tlacuache, Halcón..." 
+                                    <Input
+                                        {...register("other_species")}
+                                        placeholder="Ej. Tlacuache, Halcón..."
                                         className="rounded-xl border-2 bg-secondary/5 h-12"
                                     />
                                 </div>
@@ -233,9 +233,9 @@ export default function RescuePage() {
                                 <label className="text-sm font-black uppercase tracking-widest text-primary/60">Teléfono de Contacto</label>
                                 <div className="relative">
                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                    <Input 
-                                        {...register("phone", { required: true })} 
-                                        placeholder="10 dígitos" 
+                                    <Input
+                                        {...register("phone", { required: true })}
+                                        placeholder="10 dígitos"
                                         className="pl-11 rounded-xl border-2 bg-secondary/5 h-12"
                                     />
                                 </div>
@@ -243,33 +243,33 @@ export default function RescuePage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-black uppercase tracking-widest text-primary/60">Correo electrónico</label>
-                                <Input 
-                                    {...register("email", { 
+                                <Input
+                                    {...register("email", {
                                         required: "El correo es necesario para enviarte una copia de tu solicitud",
                                         pattern: {
                                             value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                                             message: "Correo inválido"
                                         }
-                                    })} 
-                                    placeholder="tu@correo.com" 
+                                    })}
+                                    placeholder="tu@correo.com"
                                     className="rounded-xl border-2 bg-secondary/5 h-12"
                                 />
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-black uppercase tracking-widest text-primary/60">Dirección</label>
-                                <Input 
-                                    {...register("address", { required: true })} 
-                                    placeholder="Calle, número, colonia..." 
+                                <Input
+                                    {...register("address", { required: true })}
+                                    placeholder="Calle, número, colonia..."
                                     className="rounded-xl border-2 bg-secondary/5 h-12"
                                 />
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-black uppercase tracking-widest text-primary/60">Descripción breve</label>
-                                <Textarea 
-                                    {...register("description", { required: true })} 
-                                    placeholder="¿Cuál es la situación? Ej. Panal en el jardín, perro herido..." 
+                                <Textarea
+                                    {...register("description", { required: true })}
+                                    placeholder="¿Cuál es la situación? Ej. Panal en el jardín, perro herido..."
                                     className="rounded-xl border-2 bg-secondary/5 min-h-[100px]"
                                 />
                             </div>
@@ -279,8 +279,8 @@ export default function RescuePage() {
                                     <ShieldCheck className="w-6 h-6 shrink-0" />
                                     <p>Tus datos son privados y solo se comparten con los rescatistas autorizados.</p>
                                 </div>
-                                <Button 
-                                    type="submit" 
+                                <Button
+                                    type="submit"
                                     disabled={isSubmitting || !location}
                                     className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20"
                                 >
@@ -291,7 +291,48 @@ export default function RescuePage() {
                     </CardContent>
                 </Card>
             </div>
-            
+
+            {/* Contact Section */}
+            <section className="bg-primary/5 border border-primary/20 rounded-[3rem] p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center animate-in fade-in slide-in-from-bottom duration-700">
+                <div className="space-y-4 text-left">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider">
+                        <MessageSquare className="w-3.5 h-3.5" /> Comunícate con nosotros
+                    </div>
+                    <h2 className="text-3xl font-black tracking-tight">¿Tienes alguna duda o comentario?</h2>
+                    <p className="text-muted-foreground leading-relaxed">
+                        Si tienes preguntas sobre un rescate en curso, sugerencias para nuestro equipo, o deseas colaborar con la red de rescatistas de Tierra Viva, escríbenos directamente. Estamos para escucharte.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a
+                        href="mailto:soporte@tierraviva.com.mx"
+                        className="flex items-center gap-4 p-6 rounded-2xl bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 group"
+                    >
+                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                            <Mail className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground uppercase font-black tracking-wider">Enviar Correo</p>
+                            <p className="text-sm font-bold truncate">tierraviva.raiz@gmail.com</p>
+                        </div>
+                    </a>
+                    <a
+                        href="https://wa.me/526621412251"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-4 p-6 rounded-2xl bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-green-500/20 hover:-translate-y-1 transition-all duration-300 group"
+                    >
+                        <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 text-green-600 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                            <MessageCircle className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground uppercase font-black tracking-wider">WhatsApp</p>
+                            <p className="text-sm font-bold">+52 (662) 141 2251</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
             <section className="bg-secondary/10 rounded-[3rem] p-8 md:p-16 text-center space-y-8">
                 <h2 className="text-3xl font-black">Nuestra Red Social de <span className="text-primary">Rescate</span></h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
