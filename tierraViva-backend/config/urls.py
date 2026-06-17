@@ -47,7 +47,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/blog/", include("blog.urls")),
     path("api/newsletter/", include("newsletter.urls")),
-    path("api/rescues/", include("rescues.urls")),
     path("api/activities/", include("activities.urls")),
     path('api/', include(router.urls)),
     path('api/sponsorship/', include('sponsorship.urls')),
