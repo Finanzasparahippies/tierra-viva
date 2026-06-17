@@ -206,6 +206,11 @@ export const createRescueRequest = async (data: any) => {
     return response.data;
 };
 
+export const sendRescueContact = async (data: any) => {
+    const response = await api.post("/rescues/contact/", data);
+    return response.data;
+};
+
 // Activity API
 export const getRanchUpdates = async (params?: { search?: string; tag?: string }) => {
     try {

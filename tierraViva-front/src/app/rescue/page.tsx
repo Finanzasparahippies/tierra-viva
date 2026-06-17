@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MapPin, Phone, MessageSquare, Info, ShieldCheck, HeartPulse, Mail, MessageCircle } from "lucide-react";
-import { createRescueRequest } from "@/lib/api";
+import { createRescueRequest, sendRescueContact } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -45,6 +45,12 @@ export default function RescuePage() {
     const [address, setAddress] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [othersEnabled, setOthersEnabled] = useState(false);
+
+    const [contactName, setContactName] = useState("");
+    const [contactEmail, setContactEmail] = useState("");
+    const [contactPhone, setContactPhone] = useState("");
+    const [contactComment, setContactComment] = useState("");
+    const [isContactSubmitting, setIsContactSubmitting] = useState(false);
 
     // Form logic
     const { register, handleSubmit, setValue, watch, reset } = useForm({
@@ -138,6 +144,58 @@ export default function RescuePage() {
             });
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleContactSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!contactName || !contactEmail || !contactComment) {
+            MySwal.fire({
+                title: "Campos incompletos",
+                text: "Por favor, completa los campos requeridos (Nombre, Correo y Comentario).",
+                icon: "warning",
+                confirmButtonColor: "var(--primary)",
+                customClass: { popup: "rounded-[2rem]" }
+            });
+            return;
+        }
+
+        setIsContactSubmitting(true);
+        try {
+            await sendRescueContact({
+                name: contactName,
+                email: contactEmail,
+                phone: contactPhone,
+                comment: contactComment
+            });
+            
+            MySwal.fire({
+                title: <span className="text-2xl font-black">¡Mensaje Enviado!</span>,
+                html: <p className="font-medium">Tu comentario ha sido enviado al equipo de soporte. Te responderemos a la brevedad.</p>,
+                icon: "success",
+                confirmButtonText: "Entendido",
+                confirmButtonColor: "var(--primary)",
+                customClass: {
+                    popup: "rounded-[2rem] border-2 border-primary/10",
+                    confirmButton: "rounded-xl font-bold px-8 py-3",
+                }
+            });
+
+            setContactName("");
+            setContactEmail("");
+            setContactPhone("");
+            setContactComment("");
+        } catch (error) {
+            console.error("Error submitting contact:", error);
+            MySwal.fire({
+                title: "Error",
+                text: "Hubo un problema al enviar tu comentario. Por favor intenta de nuevo.",
+                icon: "error",
+                confirmButtonColor: "var(--primary)",
+                customClass: { popup: "rounded-[2rem]" }
+            });
+        } finally {
+            setIsContactSubmitting(false);
         }
     };
 
@@ -292,44 +350,69 @@ export default function RescuePage() {
                 </Card>
             </div>
 
-            {/* Contact Section */}
-            <section className="bg-primary/5 border border-primary/20 rounded-[3rem] p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center animate-in fade-in slide-in-from-bottom duration-700">
-                <div className="space-y-4 text-left">
+            {/* Contact Form Section */}
+            <section className="bg-primary/5 border border-primary/20 rounded-[3rem] p-8 md:p-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-in fade-in slide-in-from-bottom duration-700">
+                <div className="lg:col-span-5 space-y-4 text-left">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider">
-                        <MessageSquare className="w-3.5 h-3.5" /> Comunícate con nosotros
+                        <MessageSquare className="w-3.5 h-3.5" /> Escríbenos
                     </div>
-                    <h2 className="text-3xl font-black tracking-tight">¿Tienes alguna duda o comentario?</h2>
+                    <h2 className="text-3xl font-black tracking-tight">¿Tienes dudas o comentarios?</h2>
                     <p className="text-muted-foreground leading-relaxed">
-                        Si tienes preguntas sobre un rescate en curso, sugerencias para nuestro equipo, o deseas colaborar con la red de rescatistas de Tierra Viva, escríbenos directamente. Estamos para escucharte.
+                        Si tienes preguntas sobre un rescate en curso, sugerencias para nuestro equipo, o deseas colaborar con la red de rescatistas de Tierra Viva, escríbenos directamente a través de este formulario. Tu mensaje llegará automáticamente a <strong className="text-foreground">soporte@tierraviva.com.mx</strong>.
                     </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <a
-                        href="mailto:soporte@tierraviva.com.mx"
-                        className="flex items-center gap-4 p-6 rounded-2xl bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 group"
-                    >
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            <Mail className="w-5 h-5" />
+                <div className="lg:col-span-7 bg-background p-8 rounded-3xl border border-border/50 shadow-sm w-full">
+                    <form onSubmit={handleContactSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Nombre completo *</label>
+                                <Input 
+                                    value={contactName}
+                                    onChange={(e) => setContactName(e.target.value)}
+                                    placeholder="Tu nombre" 
+                                    required
+                                    className="rounded-xl border-2 bg-secondary/5 h-12"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Correo electrónico *</label>
+                                <Input 
+                                    type="email"
+                                    value={contactEmail}
+                                    onChange={(e) => setContactEmail(e.target.value)}
+                                    placeholder="tu@correo.com" 
+                                    required
+                                    className="rounded-xl border-2 bg-secondary/5 h-12"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground uppercase font-black tracking-wider">Enviar Correo</p>
-                            <p className="text-sm font-bold truncate">tierraviva.raiz@gmail.com</p>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Teléfono de contacto (Opcional)</label>
+                            <Input 
+                                value={contactPhone}
+                                onChange={(e) => setContactPhone(e.target.value)}
+                                placeholder="10 dígitos" 
+                                className="rounded-xl border-2 bg-secondary/5 h-12"
+                            />
                         </div>
-                    </a>
-                    <a
-                        href="https://wa.me/526621412251"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-4 p-6 rounded-2xl bg-background border border-border/50 shadow-sm hover:shadow-md hover:border-green-500/20 hover:-translate-y-1 transition-all duration-300 group"
-                    >
-                        <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 text-green-600 group-hover:bg-green-500 group-hover:text-white transition-colors">
-                            <MessageCircle className="w-5 h-5" />
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mensaje / Comentario *</label>
+                            <Textarea 
+                                value={contactComment}
+                                onChange={(e) => setContactComment(e.target.value)}
+                                placeholder="Escribe aquí tu duda, sugerencia o comentario..." 
+                                required
+                                className="rounded-xl border-2 bg-secondary/5 min-h-[100px]"
+                            />
                         </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground uppercase font-black tracking-wider">WhatsApp</p>
-                            <p className="text-sm font-bold">+52 (662) 141 2251</p>
-                        </div>
-                    </a>
+                        <Button 
+                            type="submit" 
+                            disabled={isContactSubmitting}
+                            className="w-full h-12 rounded-xl text-md font-bold mt-2 shadow-lg shadow-primary/10"
+                        >
+                            {isContactSubmitting ? "Enviando..." : "Enviar Mensaje"}
+                        </Button>
+                    </form>
                 </div>
             </section>
 
