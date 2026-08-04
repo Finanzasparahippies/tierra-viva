@@ -5,6 +5,7 @@ import { getUserOrders } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Order } from "@/lib/types";
 import { 
     ShoppingBag, 
     Calendar, 
@@ -15,26 +16,8 @@ import {
     ChevronUp
 } from "lucide-react";
 
-interface OrderItemData {
-    id: number;
-    product: number;
-    product_name: string;
-    price: string;
-    quantity: number;
-}
-
-interface OrderData {
-    id: number;
-    user: number;
-    items: OrderItemData[];
-    total_price?: number;
-    paid: boolean;
-    stripe_payment_intent?: string;
-    created_at: string;
-}
-
 export default function OrdersPage() {
-    const [orders, setOrders] = useState<OrderData[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>({});
 
@@ -110,8 +93,9 @@ export default function OrdersPage() {
                     const isExpanded = expandedOrders[order.id];
 
                     // Calculate total if not provided by backend directly
-                    const totalPrice = order.total_price || order.items.reduce((acc, item) => {
-                        return acc + (parseFloat(item.price) * item.quantity);
+                    const totalPrice = order.total_cost || order.items.reduce((acc, item) => {
+                        const priceVal = typeof item.price === "string" ? parseFloat(item.price) : item.price;
+                        return acc + (priceVal * item.quantity);
                     }, 0);
 
                     const totalItemsCount = order.items.reduce((acc, item) => acc + item.quantity, 0);
@@ -162,12 +146,12 @@ export default function OrdersPage() {
                                     </div>
                                     <div className="divide-y divide-border/40">
                                         {order.items.map((item) => {
-                                            const priceVal = parseFloat(item.price);
+                                            const priceVal = typeof item.price === "string" ? parseFloat(item.price) : item.price;
                                             const subtotal = priceVal * item.quantity;
                                             return (
                                                 <div key={item.id} className="py-4 flex justify-between items-center text-sm">
                                                     <div>
-                                                        <span className="font-bold text-foreground block">{item.product_name}</span>
+                                                        <span className="font-bold text-foreground block">{item.product?.name || "Producto"}</span>
                                                         <span className="text-xs text-muted-foreground font-bold">
                                                             {item.quantity} x ${priceVal.toLocaleString('es-MX')} MXN
                                                         </span>

@@ -128,8 +128,14 @@ export interface CartItem extends Product {
 
 export interface Sponsorship {
     id: number;
-    user: number; // User ID
-    animal: number; // Animal ID
+    user: number;
+    animal: number | null;
+    animal_name?: string;
+    animal_image_url?: string;
+    tier: number;
+    tier_name?: string;
+    tier_price?: string | number;
+    billing_cycle?: "MONTHLY" | "ANNUAL";
     amount: number;
     start_date: string;
     end_date?: string;
@@ -300,7 +306,7 @@ export interface LoginCredentials {
 }
 
 export interface RegisterUserData {
-    username: string;
+    username?: string;
     email: string;
     password?: string;
     first_name?: string;
@@ -343,8 +349,8 @@ export interface CreateRescueRequestData {
 export interface SendRescueContactData {
     name: string;
     email: string;
-    message: string;
-    rescue_request?: number;
+    phone?: string;
+    comment: string;
 }
 
 export interface BackendCartItem {

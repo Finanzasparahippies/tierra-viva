@@ -5,6 +5,7 @@ import { getUserSponsorships } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Sponsorship } from "@/lib/types";
 import { 
     Heart, 
     Calendar, 
@@ -14,23 +15,8 @@ import {
     BookOpen 
 } from "lucide-react";
 
-interface SponsorshipData {
-    id: number;
-    user: number;
-    animal: number | null;
-    animal_name: string;
-    animal_image_url?: string;
-    tier: number;
-    tier_name: string;
-    tier_price: number;
-    billing_cycle: "MONTHLY" | "ANNUAL";
-    amount: number;
-    active: boolean;
-    start_date: string;
-}
-
 export default function SponsorshipsPage() {
-    const [sponsorships, setSponsorships] = useState<SponsorshipData[]>([]);
+    const [sponsorships, setSponsorships] = useState<Sponsorship[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
