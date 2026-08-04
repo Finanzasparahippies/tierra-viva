@@ -17,32 +17,61 @@ export default function DashboardLayout({
     const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
 
-    const isAdmin = user?.role === 'ADMIN' || user?.is_staff;
+    const role = user?.role || "USER";
+    const isStaff = user?.is_staff || false;
 
-    const sidebarLinks = isAdmin
-        ? [
+    let sidebarLinks = [];
+    let portalTitle = "Mi Cuenta";
+    let portalSubtitle = "Socio Santuario";
+
+    if (role === 'ADMIN' || isStaff) {
+        portalTitle = "Admin Portal";
+        portalSubtitle = "Tierra Viva Control";
+        sidebarLinks = [
             { href: "/dashboard", label: "Control Center", icon: BarChart3 },
+            { href: "/dashboard/admin-config", label: "Configuración Apps", icon: Settings },
             { href: "/dashboard/telemetry", label: "Métricas Sistema", icon: Cpu },
-            { href: "/dashboard/settings", label: "Configuración", icon: Settings },
-          ]
-        : [
-            { href: "/dashboard", label: "Resumen", icon: User },
+            { href: "/dashboard/settings", label: "Mi Perfil", icon: User },
+        ];
+    } else if (role === 'FAMILY') {
+        portalTitle = "Portal Familia";
+        portalSubtitle = "Personal del Santuario";
+        sidebarLinks = [
+            { href: "/dashboard", label: "Gestión Rancho", icon: BarChart3 },
+            { href: "/dashboard/admin-config", label: "Gestión Contenido", icon: Settings },
+            { href: "/dashboard/rescues", label: "Reportes Rescate", icon: ShieldAlert },
+            { href: "/dashboard/settings", label: "Mi Perfil", icon: User },
+        ];
+    } else if (role === 'SPONSOR') {
+        portalTitle = "Padrino Santuario";
+        portalSubtitle = "Aliado Especial";
+        sidebarLinks = [
+            { href: "/dashboard", label: "Mi Panel", icon: User },
             { href: "/dashboard/sponsorships", label: "Mis Apadrinamientos", icon: Heart },
             { href: "/dashboard/bookings", label: "Mis Actividades", icon: Ticket },
             { href: "/dashboard/orders", label: "Mis Pedidos", icon: ShoppingBag },
-            { href: "/dashboard/rescues", label: "Mis Rescates", icon: ShieldAlert },
-            { href: "/dashboard/settings", label: "Configuración", icon: Settings },
-          ];
+            { href: "/dashboard/rescues", label: "Reportar Rescate", icon: ShieldAlert },
+            { href: "/dashboard/settings", label: "Mi Perfil", icon: Settings },
+        ];
+    } else {
+        sidebarLinks = [
+            { href: "/dashboard", label: "Mi Cuenta", icon: User },
+            { href: "/dashboard/bookings", label: "Mis Actividades", icon: Ticket },
+            { href: "/dashboard/orders", label: "Mis Pedidos", icon: ShoppingBag },
+            { href: "/dashboard/rescues", label: "Reportar Rescate", icon: ShieldAlert },
+            { href: "/dashboard/settings", label: "Mi Perfil", icon: Settings },
+        ];
+    }
 
     return (
         <div className="flex flex-col md:flex-row gap-8 py-8 animate-in fade-in duration-700">
             <aside className="w-full md:w-64 space-y-3 shrink-0">
                 <div className="p-5 border border-primary/10 rounded-3xl bg-primary/5/10 bg-gradient-to-br from-primary/5 to-secondary/5 backdrop-blur-md">
                     <h2 className="font-black text-lg tracking-tight text-foreground uppercase">
-                        {isAdmin ? "Admin Portal" : "Mi Cuenta"}
+                        {portalTitle}
                     </h2>
                     <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1 opacity-85">
-                        {isAdmin ? "Tierra Viva Control" : "Socio Santuario"}
+                        {portalSubtitle}
                     </p>
                 </div>
                 <nav className="space-y-1 bg-card/30 p-2 border rounded-3xl">

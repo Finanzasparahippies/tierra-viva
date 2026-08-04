@@ -326,4 +326,96 @@ export const getUserRescues = async (): Promise<RescueRequest[]> => {
     return response.data;
 };
 
+// ── CRUD de Configuración Administrativa (Admin/Family) ──
+
+// Tiers of Sponsorship
+export const createTier = async (data: any): Promise<SponsorshipTier> => {
+    const response = await api.post<SponsorshipTier>('/sponsorship/tiers/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateTier = async (id: number, data: any): Promise<SponsorshipTier> => {
+    const response = await api.patch<SponsorshipTier>(`/sponsorship/tiers/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteTier = async (id: number): Promise<void> => {
+    await api.delete(`/sponsorship/tiers/${id}/`, { headers: getAuthHeader() });
+};
+
+// Ranch Updates
+export const createRanchUpdate = async (data: any): Promise<RanchUpdate> => {
+    const response = await api.post<RanchUpdate>('/sponsorship/updates/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateRanchUpdate = async (id: number, data: any): Promise<RanchUpdate> => {
+    const response = await api.patch<RanchUpdate>(`/sponsorship/updates/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteRanchUpdate = async (id: number): Promise<void> => {
+    await api.delete(`/sponsorship/updates/${id}/`, { headers: getAuthHeader() });
+};
+
+// Species
+export const createSpecies = async (data: any): Promise<Species> => {
+    const response = await api.post<Species>('/species/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateSpecies = async (id: number, data: any): Promise<Species> => {
+    const response = await api.patch<Species>(`/species/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteSpecies = async (id: number): Promise<void> => {
+    await api.delete(`/species/${id}/`, { headers: getAuthHeader() });
+};
+
+// Animals
+export const createAnimal = async (data: any): Promise<Animal> => {
+    const response = await api.post<Animal>('/animals/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateAnimal = async (id: number, data: any): Promise<Animal> => {
+    const response = await api.patch<Animal>(`/animals/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteAnimal = async (id: number): Promise<void> => {
+    await api.delete(`/animals/${id}/`, { headers: getAuthHeader() });
+};
+
+// Products
+export const createProduct = async (data: any): Promise<Product> => {
+    const response = await api.post<Product>('/products/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateProduct = async (id: number, data: any): Promise<Product> => {
+    const response = await api.patch<Product>(`/products/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteProduct = async (id: number): Promise<void> => {
+    await api.delete(`/products/${id}/`, { headers: getAuthHeader() });
+};
+
+// Activities
+export const createActivity = async (data: any): Promise<Activity> => {
+    const response = await api.post<Activity>('/activities/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateActivity = async (id: number, data: any): Promise<Activity> => {
+    const response = await api.patch<Activity>(`/activities/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteActivity = async (id: number): Promise<void> => {
+    await api.delete(`/activities/${id}/`, { headers: getAuthHeader() });
+};
+
 export default api;

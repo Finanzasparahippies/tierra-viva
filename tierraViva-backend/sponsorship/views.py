@@ -14,11 +14,23 @@ from .serializers import RanchUpdateSerializer, SponsorshipTierSerializer, Ranch
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-class SponsorshipTierListView(APIView):
-    def get(self, request):
-        tiers = SponsorshipTier.objects.all().order_by('level')
-        serializer = SponsorshipTierSerializer(tiers, many=True)
-        return Response(serializer.data)
+from rest_framework import viewsets
+from config.permissions import IsStaffOrReadOnly
+
+class SponsorshipTierViewSet(viewsets.ModelViewSet):
+    queryset = SponsorshipTier.objects.all().order_by('level')
+    serializer_class = SponsorshipTierSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), IsStaffOrReadOnly()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or user.role in ['ADMIN', 'FAMILY']):
+            return SponsorshipTier.objects.all().order_by('level')
+        return SponsorshipTier.objects.filter(is_active=True).order_by('level')
 
 class RanchUpdateTagListView(APIView):
     def get(self, request):
@@ -241,26 +253,30 @@ def handle_successful_payment(session):
         logger.error(f"Error handling webhook payment: {e}")
 
 
-class RanchUpdateListView(APIView):
-    # Allow anonymous users to see Tier 0 updates
-    permission_classes = [permissions.AllowAny]
+class RanchUpdateViewSet(viewsets.ModelViewSet):
+    queryset = RanchUpdate.objects.all()
+    serializer_class = RanchUpdateSerializer
 
-    def get(self, request):
-        # Default level is 0 for anonymous or non-sponsors
-        max_level = 0
-        
-        if request.user.is_authenticated:
-            # Get user's max tier level
-            active_sponsorships = Sponsorship.objects.filter(user=request.user, active=True)
-            for s in active_sponsorships:
-                if s.tier and s.tier.level > max_level:
-                    max_level = s.tier.level
-            
-        # Base queryset filtered by level
-        queryset = RanchUpdate.objects.filter(min_tier_level__lte=max_level)
-        
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), IsStaffOrReadOnly()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or user.role in ['ADMIN', 'FAMILY']):
+            queryset = RanchUpdate.objects.all()
+        else:
+            max_level = 0
+            if user and user.is_authenticated:
+                active_sponsorships = Sponsorship.objects.filter(user=user, active=True)
+                for s in active_sponsorships:
+                    if s.tier and s.tier.level > max_level:
+                        max_level = s.tier.level
+            queryset = RanchUpdate.objects.filter(min_tier_level__lte=max_level)
+
         # Apply Search
-        search_query = request.query_params.get('search')
+        search_query = self.request.query_params.get('search')
         if search_query:
             queryset = queryset.filter(
                 Q(title__icontains=search_query) | 
@@ -268,13 +284,11 @@ class RanchUpdateListView(APIView):
             )
             
         # Apply Tag Filter
-        tag_slug = request.query_params.get('tag')
+        tag_slug = self.request.query_params.get('tag')
         if tag_slug:
             queryset = queryset.filter(tags__slug=tag_slug)
             
-        updates = queryset.distinct().order_by('-created_at')
-        serializer = RanchUpdateSerializer(updates, many=True)
-        return Response(serializer.data)
+        return queryset.distinct().order_by('-created_at')
 
 
 class UserSponsorshipsListView(APIView):

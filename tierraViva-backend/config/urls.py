@@ -25,6 +25,7 @@ from shop.views import ProductViewSet, OrderViewSet, CartViewSet
 from blog.views import PostViewSet
 from newsletter.views import SubscriberViewSet
 from rescues.views import RescueRequestViewSet
+from sponsorship.views import SponsorshipTierViewSet, RanchUpdateViewSet
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -42,6 +43,8 @@ router.register(r'cart', CartViewSet, basename='cart')
 router.register(r'posts', PostViewSet)
 router.register(r'subscribers', SubscriberViewSet)
 router.register(r'rescues', RescueRequestViewSet)
+router.register(r'sponsorship/tiers', SponsorshipTierViewSet, basename='sponsorship-tier')
+router.register(r'sponsorship/updates', RanchUpdateViewSet, basename='ranch-update')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

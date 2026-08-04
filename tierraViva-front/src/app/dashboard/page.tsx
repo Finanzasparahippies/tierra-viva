@@ -2,8 +2,14 @@
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect, useState } from "react";
-import { getRanchFolders, getAnalyticsOverview } from "@/lib/api";
-import { AnimalContentFolder, AnalyticsOverviewData } from "@/lib/types";
+import { 
+    getRanchFolders, getAnalyticsOverview, getUserSponsorships, 
+    getRanchUpdates, getUserRescues, getAnimals, getUserBookings, getUserOrders
+} from "@/lib/api";
+import { 
+    AnimalContentFolder, AnalyticsOverviewData, Sponsorship, 
+    RanchUpdate, RescueRequest, Animal, Booking, Order 
+} from "@/lib/types";
 import AnimalFolders from "@/components/animals/AnimalFolders";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -15,17 +21,27 @@ import {
     DollarSign, 
     Calendar, 
     ArrowUpRight, 
+    ArrowRight,
     Award,
     Activity,
-    Compass
+    Compass,
+    Sparkles,
+    User as UserIcon,
+    Layers,
+    BookOpen
 } from "lucide-react";
 
 export default function DashboardPage() {
     const user = useAuthStore((state) => state.user);
-    const isAdmin = user?.role === 'ADMIN' || user?.is_staff;
+    const role = user?.role || "USER";
+    const isStaff = user?.is_staff || false;
 
-    if (isAdmin) {
+    if (role === 'ADMIN' || isStaff) {
         return <AdminDashboard />;
+    } else if (role === 'FAMILY') {
+        return <FamilyDashboard />;
+    } else if (role === 'SPONSOR') {
+        return <SponsorDashboard />;
     }
     return <ClientDashboard />;
 }
@@ -414,6 +430,226 @@ function AdminDashboard() {
                     </Link>
                 </div>
             </section>
+        </div>
+    );
+}
+
+// ==========================================
+// FAMILY DASHBOARD
+// ==========================================
+function FamilyDashboard() {
+    const user = useAuthStore((state) => state.user);
+    const [animals, setAnimals] = useState<Animal[]>([]);
+    const [rescues, setRescues] = useState<RescueRequest[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFamilyData = async () => {
+            try {
+                const animalsData = await getAnimals();
+                setAnimals(animalsData);
+                const rescuesData = await getUserRescues();
+                setRescues(rescuesData);
+            } catch (error) {
+                console.error("Error loading family data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchFamilyData();
+    }, []);
+
+    return (
+        <div className="space-y-12">
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary/10 via-secondary/5 to-background p-8 md:p-12 border border-primary/10 shadow-2xl">
+                <div className="relative z-10 space-y-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary font-black text-[10px] uppercase tracking-wider">
+                        <Heart className="w-3.5 h-3.5" /> Miembro del Rancho (Familia)
+                    </span>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                        ¡Hola, <span className="text-primary">{user?.first_name || user?.username}</span>!
+                    </h1>
+                    <p className="text-muted-foreground text-lg leading-relaxed max-w-xl">
+                        Gracias por tu labor incansable en el santuario. Aquí tienes la visión rápida sobre el estado del rancho y las alertas de rescates.
+                    </p>
+                </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-8 border rounded-3xl bg-card shadow-sm hover:border-primary/20 transition-all">
+                    <p className="text-xs font-black uppercase text-muted-foreground">Rancho</p>
+                    <h3 className="text-4xl font-black text-primary mt-2">{loading ? "..." : animals.length}</h3>
+                    <p className="text-sm font-bold text-foreground mt-1">Animales Rescatados Activos</p>
+                </div>
+                <div className="p-8 border rounded-3xl bg-card shadow-sm hover:border-primary/20 transition-all">
+                    <p className="text-xs font-black uppercase text-muted-foreground">Alertas</p>
+                    <h3 className="text-4xl font-black text-destructive mt-2">{loading ? "..." : rescues.filter(r => r.status === "PENDING").length}</h3>
+                    <p className="text-sm font-bold text-foreground mt-1">Rescates Pendientes de Atención</p>
+                </div>
+            </div>
+
+            {/* Rescues and updates */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-foreground">Solicitudes de Rescate Recientes</h3>
+                    {loading ? (
+                        <Skeleton className="h-60 rounded-3xl" />
+                    ) : rescues.length > 0 ? (
+                        <div className="space-y-4">
+                            {rescues.slice(0, 3).map((rescue) => (
+                                <div key={rescue.id} className="p-5 border rounded-2xl bg-muted/20 space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-foreground">#{rescue.id} - {rescue.reporter_name}</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                            rescue.status === "PENDING" ? "bg-amber-500/10 text-amber-500" : "bg-green-500/10 text-green-500"
+                                        }`}>{rescue.status}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{rescue.location}</p>
+                                    <p className="text-sm font-medium">{rescue.description}</p>
+                                </div>
+                            ))}
+                            <Link href="/dashboard/rescues" className="inline-block text-xs font-black uppercase text-primary hover:underline">
+                                Ver todos los reportes →
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="p-6 border rounded-2xl bg-muted/10 text-center text-sm font-bold text-muted-foreground">
+                            No hay reportes de rescate registrados.
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-foreground">Acciones del Rancho</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        <Link href="/dashboard/admin-config" className="p-6 border bg-card hover:bg-primary/5 hover:border-primary/20 rounded-3xl block transition-all shadow-sm">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">Gestión</span>
+                            <h4 className="font-bold text-lg text-foreground">Actualizar Contenido</h4>
+                            <p className="text-xs text-muted-foreground mt-1">Sube fotos o videos a las carpetas exclusivas del rancho.</p>
+                        </Link>
+                        <Link href="/dashboard/admin-config?tab=updates" className="p-6 border bg-card hover:bg-primary/5 hover:border-primary/20 rounded-3xl block transition-all shadow-sm">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary mb-1 block">Comunicación</span>
+                            <h4 className="font-bold text-lg text-foreground">Escribir una bitácora</h4>
+                            <p className="text-xs text-muted-foreground mt-1">Escribe una actualización para los patrocinadores del rancho.</p>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ==========================================
+// SPONSOR DASHBOARD
+// ==========================================
+function SponsorDashboard() {
+    const user = useAuthStore((state) => state.user);
+    const [sponsorships, setSponsorships] = useState<Sponsorship[]>([]);
+    const [updates, setUpdates] = useState<RanchUpdate[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSponsorData = async () => {
+            try {
+                const spData = await getUserSponsorships();
+                setSponsorships(spData);
+                const updatesData = await getRanchUpdates();
+                setUpdates(updatesData);
+            } catch (error) {
+                console.error("Error loading sponsor data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSponsorData();
+    }, []);
+
+    const totalContributions = user?.total_contributions !== undefined 
+        ? `$${user.total_contributions.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN` 
+        : "$0.00 MXN";
+
+    return (
+        <div className="space-y-12">
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary/10 via-secondary/5 to-background p-8 md:p-12 border border-primary/10 shadow-2xl">
+                <div className="relative z-10 space-y-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary font-black text-[10px] uppercase tracking-wider">
+                        <Heart className="w-3.5 h-3.5 text-primary animate-pulse" /> Padrino del Santuario
+                    </span>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                        ¡Bienvenido, <span className="text-primary">{user?.first_name || user?.username}</span>!
+                    </h1>
+                    <p className="text-muted-foreground text-lg leading-relaxed max-w-xl">
+                        Tu apoyo directo ayuda a proveer alimento, medicina y refugio. Aquí puedes seguir las actualizaciones exclusivas de tus apadrinados.
+                    </p>
+                </div>
+            </div>
+
+            {/* Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-8 border rounded-3xl bg-card shadow-sm hover:border-primary/20 transition-all">
+                    <p className="text-xs font-black uppercase text-muted-foreground">Tu Nivel</p>
+                    <h3 className="text-3xl font-black text-primary mt-2">
+                        {loading ? "Cargando..." : sponsorships.length > 0 ? sponsorships[0].tier_name : "Sponsor Activo"}
+                    </h3>
+                    <p className="text-sm font-bold text-foreground mt-1">Apadrinamientos activos: {sponsorships.length}</p>
+                </div>
+                <div className="p-8 border rounded-3xl bg-card shadow-sm hover:border-primary/20 transition-all">
+                    <p className="text-xs font-black uppercase text-muted-foreground">Aportación Acumulada</p>
+                    <h3 className="text-4xl font-black text-primary mt-2">{totalContributions}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Gracias por marcar la diferencia</p>
+                </div>
+            </div>
+
+            {/* Sponsored Animals & Exclusive Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-foreground">Tus Apadrinados</h3>
+                    {loading ? (
+                        <Skeleton className="h-60 rounded-3xl" />
+                    ) : sponsorships.length > 0 ? (
+                        <div className="space-y-4">
+                            {sponsorships.map((sp) => (
+                                <div key={sp.id} className="p-5 border rounded-2xl bg-card flex justify-between items-center shadow-sm">
+                                    <div>
+                                        <h4 className="font-bold text-lg text-foreground">{sp.animal_name || "Apoyo General al Rancho"}</h4>
+                                        <p className="text-xs text-muted-foreground">Membresía {sp.billing_cycle === "MONTHLY" ? "Mensual" : "Anual"}</p>
+                                    </div>
+                                    <span className="font-mono text-sm font-bold text-primary">${sp.amount} MXN</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-8 border rounded-[2rem] bg-muted/10 text-center space-y-4">
+                            <p className="text-sm font-bold text-muted-foreground">No tienes apadrinamientos específicos todavía.</p>
+                            <Link href="/animals">
+                                <Button className="rounded-full font-bold">Ver Animales para Apadrinar</Button>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-black text-foreground">Bitácoras y Novedades del Rancho</h3>
+                    {loading ? (
+                        <Skeleton className="h-60 rounded-3xl" />
+                    ) : updates.length > 0 ? (
+                        <div className="space-y-4">
+                            {updates.slice(0, 3).map((up) => (
+                                <div key={up.id} className="p-5 border rounded-2xl bg-muted/20 space-y-1">
+                                    <h4 className="font-bold text-foreground">{up.title}</h4>
+                                    <p className="text-xs text-muted-foreground">Publicado el {new Date(up.created_at).toLocaleDateString()}</p>
+                                    <p className="text-sm text-foreground line-clamp-2 mt-1">{up.content?.replace(/<[^>]*>/g, '')}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-6 border rounded-2xl bg-muted/10 text-center text-sm font-bold text-muted-foreground">
+                            Aún no hay actualizaciones exclusivas del rancho.
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

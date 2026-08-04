@@ -26,9 +26,17 @@ class AnimalContentFolderViewSet(viewsets.ReadOnlyModelViewSet):
             
         return queryset
 
-class SpeciesViewSet(viewsets.ReadOnlyModelViewSet):
+class SpeciesViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para listar las especies disponibles.
+    ViewSet para listar y administrar las especies disponibles.
     """
     queryset = Species.objects.all()
     serializer_class = SpeciesSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            from rest_framework import permissions
+            return [permissions.AllowAny()]
+        from config.permissions import IsStaffOrReadOnly
+        from rest_framework import permissions
+        return [permissions.IsAuthenticated(), IsStaffOrReadOnly()]

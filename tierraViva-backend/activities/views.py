@@ -9,10 +9,27 @@ from .serializers import ActivitySerializer, BookingSerializer
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Activity.objects.filter(is_active=True)
+class ActivityViewSet(viewsets.ModelViewSet):
+    queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     lookup_field = 'slug'
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            from rest_framework import permissions
+            return [permissions.AllowAny()]
+        if self.action == 'checkout':
+            from rest_framework import permissions
+            return [permissions.IsAuthenticated()]
+        from config.permissions import IsStaffOrReadOnly
+        from rest_framework import permissions
+        return [permissions.IsAuthenticated(), IsStaffOrReadOnly()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or user.role in ['ADMIN', 'FAMILY']):
+            return Activity.objects.all()
+        return Activity.objects.filter(is_active=True)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def checkout(self, request, slug=None):
