@@ -14,7 +14,8 @@ class UsersAppTests(TestCase):
             password="securepassword123",
             first_name="Family",
             last_name="Member",
-            role="FAMILY"
+            role="FAMILY",
+            is_staff=True
         )
         self.family_profile = FamilyProfile.objects.create(
             user=self.user,

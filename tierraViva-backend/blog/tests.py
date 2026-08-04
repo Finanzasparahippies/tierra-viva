@@ -1,16 +1,24 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from blog.models import Post
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class BlogAppTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.author = User.objects.create_user(
+            email="author@example.com",
+            username="authoruser",
+            password="securepassword123"
+        )
         self.post = Post.objects.create(
             title="Primer Anuncio en el Rancho",
             slug="primer-anuncio-rancho",
             content="Contenido detallado sobre la vida en el rancho...",
             is_public=True,
-            author="Tierra Viva"
+            author=self.author
         )
 
     def test_post_list_api(self):
