@@ -293,4 +293,91 @@ export interface RescueRequest {
     updated_at: string;
 }
 
+export interface LoginCredentials {
+    username?: string;
+    email?: string;
+    password?: string;
+}
+
+export interface RegisterUserData {
+    username: string;
+    email: string;
+    password?: string;
+    first_name?: string;
+    last_name?: string;
+}
+
+export interface UpdateMeData {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    bio?: string;
+}
+
+export interface CreateOrderData {
+    items: Array<{
+        product_id: number;
+        quantity: number;
+    }>;
+    address?: string;
+    phone?: string;
+}
+
+export interface ConfirmPasswordResetData {
+    uidb64: string;
+    token: string;
+    new_password?: string;
+}
+
+export interface CreateRescueRequestData {
+    animal_type: string;
+    other_species?: string;
+    description: string;
+    latitude: number;
+    longitude: number;
+    address: string;
+    phone: string;
+    photo?: string;
+}
+
+export interface SendRescueContactData {
+    name: string;
+    email: string;
+    message: string;
+    rescue_request?: number;
+}
+
+export interface BackendCartItem {
+    id: number;
+    product: Product;
+    quantity: number;
+}
+
+export interface BackendCart {
+    id: number;
+    user: number;
+    items: BackendCartItem[];
+}
+
+export interface OrderItem {
+    id: number;
+    product: Product;
+    price: number;
+    quantity: number;
+    get_cost: number;
+}
+
+export interface Order {
+    id: number;
+    user: number;
+    items: OrderItem[];
+    created_at: string;
+    updated_at: string;
+    paid: boolean;
+    status: 'PENDING' | 'PAID' | 'CANCELLED';
+    total_cost: number;
+}
+
+
+
 

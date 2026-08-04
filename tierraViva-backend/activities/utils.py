@@ -95,18 +95,24 @@ def send_booking_ticket_email(booking):
         to=[booking.user.email]
     )
     msg.attach_alternative(html_content, "text/html")
-    msg.mixed_subtype = 'related'
 
     # 4. Generate & Attach QR Code Inline
     try:
+        from email.message import MIMEPart
         qr_bytes = generate_booking_qr(booking)
-        qr_image = MIMEImage(qr_bytes, _subtype='png')
-        qr_image.add_header('Content-ID', '<qr_code>')
-        qr_image.add_header('Content-Disposition', 'inline', filename=f"ticket_{str(booking.token)[:8]}.png")
-        msg.attach(qr_image)
+        qr_part = MIMEPart()
+        qr_part.set_content(
+            qr_bytes,
+            maintype="image",
+            subtype="png",
+        )
+        qr_part.add_header('Content-ID', '<qr_code>')
+        qr_part.add_header('Content-Disposition', 'inline', filename=f"ticket_{str(booking.token)[:8]}.png")
+        msg.attach(qr_part)
     except Exception as qr_err:
         logger.error(f"Error generating or attaching QR code: {qr_err}")
 
     # 5. Dispatch
     msg.send(fail_silently=False)
     logger.info(f"[Booking/Delivery] ✅ Ticket email sent successfully for booking {booking.id}")
+

@@ -88,3 +88,29 @@ class ActivitiesAppTests(TestCase):
         booking.refresh_from_db()
         self.assertTrue(booking.is_scanned)
         self.assertIsNotNone(booking.scanned_at)
+
+    def test_send_booking_ticket_email_success(self):
+        # Create a paid booking
+        booking = Booking.objects.create(
+            user=self.user,
+            activity=self.activity,
+            tickets=2,
+            total_price=500.00,
+            status='PAID'
+        )
+        from activities.utils import send_booking_ticket_email
+        from django.core import mail
+        
+        # Clear outbox
+        mail.outbox = []
+        
+        # Deliver email (this runs the MIMEPart construction)
+        send_booking_ticket_email(booking)
+        
+        # Verify one email was sent
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.subject, f"🎟️ Tu acceso confirmado para {self.activity.title} — Tierra Viva")
+        self.assertEqual(sent_email.to, [self.user.email])
+        self.assertEqual(len(sent_email.attachments), 1)
+

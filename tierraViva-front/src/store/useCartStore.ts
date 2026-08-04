@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CartItem, Product } from "@/lib/types";
+import { CartItem, Product, BackendCartItem } from "@/lib/types";
 import { useAuthStore } from "./useAuthStore";
 import { apiAddToCart, apiRemoveFromCart, apiClearCart, apiGetCart } from "@/lib/api";
+import axios from "axios";
 
 interface CartState {
     items: CartItem[];
@@ -24,13 +25,13 @@ export const useCartStore = create<CartState>()(
                 try {
                     const data = await apiGetCart();
                     // Map backend CartItem to frontend Type
-                    const items = data.items.map((item: any) => ({
+                    const items = data.items.map((item: BackendCartItem) => ({
                         ...item.product,
                         quantity: item.quantity
                     }));
                     set({ items });
-                } catch (error: any) {
-                    if (error.response?.status === 401) {
+                } catch (error) {
+                    if (axios.isAxiosError(error) && error.response?.status === 401) {
                         useAuthStore.getState().logout();
                     }
                     console.error("Error fetching cart:", error);

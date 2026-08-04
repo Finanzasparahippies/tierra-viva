@@ -1,6 +1,31 @@
 // api.ts
 import axios from "axios";
-import { Product, BlogPost, Activity } from "./types";
+import {
+    Product,
+    BlogPost,
+    Activity,
+    LoginCredentials,
+    RegisterUserData,
+    UpdateMeData,
+    CreateOrderData,
+    ConfirmPasswordResetData,
+    CreateRescueRequestData,
+    SendRescueContactData,
+    BackendCart,
+    Species,
+    User,
+    SponsorshipTier,
+    Animal,
+    AnimalContentFolder,
+    RanchUpdate,
+    RanchUpdateTag,
+    Booking,
+    SystemMetrics,
+    AnalyticsOverviewData,
+    RescueRequest,
+    Sponsorship,
+    Order
+} from "./types";
 
 const isServer = typeof window === "undefined";
 
@@ -43,13 +68,21 @@ api.interceptors.request.use((config) => {
     return config;
 }, (error) => Promise.reject(error));
 
-export const login = async (credentials: any) => {
-    const response = await api.post('/token/', credentials);
+// Safe helper to resolve current domain origin whether in client or SSR
+export const getFrontendOrigin = (): string => {
+    if (typeof window !== "undefined") {
+        return window.location.origin;
+    }
+    return process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+};
+
+export const login = async (credentials: LoginCredentials): Promise<{ access: string; refresh?: string }> => {
+    const response = await api.post<{ access: string; refresh?: string }>('/token/', credentials);
     return response.data;
 };
 
-export const register = async (userData: any) => {
-    const response = await api.post('/users/', userData);
+export const register = async (userData: RegisterUserData): Promise<User> => {
+    const response = await api.post<User>('/users/', userData);
     return response.data;
 };
 
@@ -69,156 +102,153 @@ const getAuthHeader = () => {
     return {};
 };
 
-export const getMe = async (token?: string) => {
+export const getMe = async (token?: string): Promise<User> => {
     const headers = token ? { 'Authorization': `Bearer ${token}` } : getAuthHeader();
-    const response = await api.get('/users/me/', { headers });
+    const response = await api.get<User>('/users/me/', { headers });
     return response.data;
 };
 
-export const getSpecies = async () => {
-    const response = await api.get('/species/');
+export const getSpecies = async (): Promise<Species[]> => {
+    const response = await api.get<Species[]>('/species/');
     return response.data;
 };
 
-export const getTeam = async () => {
-    const response = await api.get('/users/team/');
+export const getTeam = async (): Promise<User[]> => {
+    const response = await api.get<User[]>('/users/team/');
     return response.data;
 };
 
-export const updateMe = async (data: any, token?: string) => {
+export const updateMe = async (data: UpdateMeData, token?: string): Promise<User> => {
     const headers = token ? { 'Authorization': `Bearer ${token}` } : getAuthHeader();
-    const response = await api.patch('/users/me/', data, { headers });
+    const response = await api.patch<User>('/users/me/', data, { headers });
     return response.data;
 };
 
-export const getAnimals = async () => {
-    const response = await api.get('/animals/');
-    return response.data;
-};
-export const getProducts = async () => {
-    const response = await api.get(`/products/?t=${Date.now()}`);
+export const getAnimals = async (): Promise<Animal[]> => {
+    const response = await api.get<Animal[]>('/animals/');
     return response.data;
 };
 
-export const getPosts = async () => {
-    const response = await api.get('/posts/');
+export const getProducts = async (): Promise<Product[]> => {
+    const response = await api.get<Product[]>(`/products/?t=${Date.now()}`);
     return response.data;
 };
 
-export const getPostBySlug = async (slug: string) => {
-    const response = await api.get(`/posts/${slug}/`);
+export const getPosts = async (): Promise<BlogPost[]> => {
+    const response = await api.get<BlogPost[]>('/posts/');
     return response.data;
 };
 
-export const getProductBySlug = (slug: string) => api.get<Product>(`/products/${slug}/?t=${Date.now()}`).then(res => res.data);
-
-export const getTiers = async () => {
-    const response = await api.get('/sponsorship/tiers/');
+export const getPostBySlug = async (slug: string): Promise<BlogPost> => {
+    const response = await api.get<BlogPost>(`/posts/${slug}/`);
     return response.data;
 };
 
-export const getAnimal = async (id: string | number) => {
-    const response = await api.get(`/animals/${id}/`);
+export const getProductBySlug = (slug: string): Promise<Product> => 
+    api.get<Product>(`/products/${slug}/?t=${Date.now()}`).then(res => res.data);
+
+export const getTiers = async (): Promise<SponsorshipTier[]> => {
+    const response = await api.get<SponsorshipTier[]>('/sponsorship/tiers/');
     return response.data;
 };
 
-export const getFolders = async (filters?: { animal?: number | string; species?: number | string }) => {
+export const getAnimal = async (id: string | number): Promise<Animal> => {
+    const response = await api.get<Animal>(`/animals/${id}/`);
+    return response.data;
+};
+
+export const getFolders = async (filters?: { animal?: number | string; species?: number | string }): Promise<AnimalContentFolder[]> => {
     const params = new URLSearchParams();
     if (filters?.animal) params.append('animal', String(filters.animal));
     if (filters?.species) params.append('species', String(filters.species));
 
-    const response = await api.get(`/ranch-folders/?${params.toString()}`);
+    const response = await api.get<AnimalContentFolder[]>(`/ranch-folders/?${params.toString()}`);
     return response.data;
 };
 
-export const getRanchFolders = async () => {
-    const response = await api.get('/ranch-folders/');
+export const getRanchFolders = async (): Promise<AnimalContentFolder[]> => {
+    const response = await api.get<AnimalContentFolder[]>('/ranch-folders/');
     return response.data;
 };
 
-// export const getRanchUpdates = async () => {
-//     const response = await api.get('/sponsorship/updates/');
-//     return response.data;
-// };
-
-export const createOrder = async (orderData: any) => {
-    const response = await api.post('/orders/', orderData, { headers: getAuthHeader() });
+export const createOrder = async (orderData: CreateOrderData): Promise<Order> => {
+    const response = await api.post<Order>('/orders/', orderData, { headers: getAuthHeader() });
     return response.data;
 };
 
-export const createOrderCheckoutSession = async (orderId: number) => {
-    const response = await api.post(`/orders/${orderId}/checkout/`, {
-        success_url: `${window.location.origin}/success`,
-        cancel_url: `${window.location.origin}/cancel`
+export const createOrderCheckoutSession = async (orderId: number): Promise<{ checkout_url: string }> => {
+    const response = await api.post<{ checkout_url: string }>(`/orders/${orderId}/checkout/`, {
+        success_url: `${getFrontendOrigin()}/success`,
+        cancel_url: `${getFrontendOrigin()}/cancel`
     }, { headers: getAuthHeader() });
     return response.data;
 };
 
-export const createCheckoutSession = async (tierId: number, animalId?: number, is_annual: boolean = false) => {
-    const response = await api.post('/sponsorship/checkout/', {
+export const createCheckoutSession = async (tierId: number, animalId?: number, is_annual: boolean = false): Promise<{ checkout_url: string }> => {
+    const response = await api.post<{ checkout_url: string }>('/sponsorship/checkout/', {
         tier_id: tierId,
         animal_id: animalId,
         is_annual: is_annual,
-        success_url: `${window.location.origin}/success`,
-        cancel_url: `${window.location.origin}/cancel`
+        success_url: `${getFrontendOrigin()}/success`,
+        cancel_url: `${getFrontendOrigin()}/cancel`
     }, { headers: getAuthHeader() });
     return response.data;
 };
 
 // Cart API
-export const apiGetCart = async () => {
-    const response = await api.get("/cart/mine/");
+export const apiGetCart = async (): Promise<BackendCart> => {
+    const response = await api.get<BackendCart>("/cart/mine/");
     return response.data;
 };
 
-export const apiAddToCart = async (productId: number, quantity: number = 1) => {
-    const response = await api.post("/cart/add_item/", { product_id: productId, quantity });
+export const apiAddToCart = async (productId: number, quantity: number = 1): Promise<BackendCart> => {
+    const response = await api.post<BackendCart>("/cart/add_item/", { product_id: productId, quantity });
     return response.data;
 };
 
-export const apiRemoveFromCart = async (productId: number) => {
-    const response = await api.post("/cart/remove_item/", { product_id: productId });
+export const apiRemoveFromCart = async (productId: number): Promise<BackendCart> => {
+    const response = await api.post<BackendCart>("/cart/remove_item/", { product_id: productId });
     return response.data;
 };
 
-export const apiConfirmOrder = async (orderId: number) => {
-    const response = await api.post(`/orders/${orderId}/confirm/`);
+export const apiConfirmOrder = async (orderId: number): Promise<{ status: string }> => {
+    const response = await api.post<{ status: string }>(`/orders/${orderId}/confirm/`);
     return response.data;
 };
 
-export const apiClearCart = async () => {
-    const response = await api.post("/cart/clear/");
+export const apiClearCart = async (): Promise<BackendCart> => {
+    const response = await api.post<BackendCart>("/cart/clear/");
     return response.data;
 };
 
-export const requestPasswordReset = async (email: string) => {
-    const response = await api.post("/users/password_reset_request/", { email });
+export const requestPasswordReset = async (email: string): Promise<{ status: string }> => {
+    const response = await api.post<{ status: string }>("/users/password_reset_request/", { email });
     return response.data;
 };
 
-export const confirmPasswordReset = async (data: any) => {
-    const response = await api.post("/users/password_reset_confirm/", data);
+export const confirmPasswordReset = async (data: ConfirmPasswordResetData): Promise<{ status: string }> => {
+    const response = await api.post<{ status: string }>("/users/password_reset_confirm/", data);
     return response.data;
 };
 
-export const createRescueRequest = async (data: any) => {
-    const response = await api.post("/rescues/", data);
+export const createRescueRequest = async (data: CreateRescueRequestData): Promise<RescueRequest> => {
+    const response = await api.post<RescueRequest>("/rescues/", data);
     return response.data;
 };
 
-export const sendRescueContact = async (data: any) => {
-    const response = await api.post("/rescues/contact/", data);
+export const sendRescueContact = async (data: SendRescueContactData): Promise<{ status: string }> => {
+    const response = await api.post<{ status: string }>("/rescues/contact/", data);
     return response.data;
 };
 
 // Activity API
-export const getRanchUpdates = async (params?: { search?: string; tag?: string }) => {
+export const getRanchUpdates = async (params?: { search?: string; tag?: string }): Promise<RanchUpdate[]> => {
     try {
         const query = new URLSearchParams();
         if (params?.search) query.append('search', params.search);
         if (params?.tag) query.append('tag', params.tag);
 
-        const response = await api.get(`/sponsorship/updates/?${query.toString()}`);
+        const response = await api.get<RanchUpdate[]>(`/sponsorship/updates/?${query.toString()}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching ranch updates:", error);
@@ -226,9 +256,9 @@ export const getRanchUpdates = async (params?: { search?: string; tag?: string }
     }
 };
 
-export const getRanchTags = async () => {
+export const getRanchTags = async (): Promise<RanchUpdateTag[]> => {
     try {
-        const response = await api.get('/sponsorship/tags/');
+        const response = await api.get<RanchUpdateTag[]>('/sponsorship/tags/');
         return response.data;
     } catch (error) {
         console.error("Error fetching ranch tags:", error);
@@ -236,19 +266,19 @@ export const getRanchTags = async () => {
     }
 };
 
-export const getActivities = async () => {
+export const getActivities = async (): Promise<Activity[]> => {
     try {
-        const response = await api.get('/activities/');
+        const response = await api.get<Activity[]>('/activities/');
         return response.data;
     } catch (error) {
         console.error("API Error [getActivities]:", error);
-        return []; // Return empty array to prevent page crash
+        return [];
     }
 };
 
-export const getActivityBySlug = async (slug: string) => {
+export const getActivityBySlug = async (slug: string): Promise<Activity | null> => {
     try {
-        const response = await api.get(`/activities/${slug}/`);
+        const response = await api.get<Activity>(`/activities/${slug}/`);
         return response.data;
     } catch (error) {
         console.error("API Error [getActivityBySlug]:", error);
@@ -256,43 +286,43 @@ export const getActivityBySlug = async (slug: string) => {
     }
 };
 
-export const createActivityCheckoutSession = async (slug: string, tickets: number = 1) => {
-    const response = await api.post(`/activities/${slug}/checkout/`, { tickets }, { headers: getAuthHeader() });
+export const createActivityCheckoutSession = async (slug: string, tickets: number = 1): Promise<{ id: string; url: string }> => {
+    const response = await api.post<{ id: string; url: string }>(`/activities/${slug}/checkout/`, { tickets }, { headers: getAuthHeader() });
     return response.data;
 };
 
-export const subscribeNewsletter = async (email: string) => {
-    const response = await api.post('/newsletter/subscribers/', { email });
+export const subscribeNewsletter = async (email: string): Promise<{ status: string }> => {
+    const response = await api.post<{ status: string }>('/newsletter/subscribers/', { email });
     return response.data;
 };
 
-export const getUserSponsorships = async () => {
-    const response = await api.get('/sponsorship/mine/', { headers: getAuthHeader() });
+export const getUserSponsorships = async (): Promise<Sponsorship[]> => {
+    const response = await api.get<Sponsorship[]>('/sponsorship/mine/', { headers: getAuthHeader() });
     return response.data;
 };
 
-export const getAnalyticsOverview = async () => {
-    const response = await api.get('/dashboard/analytics/', { headers: getAuthHeader() });
+export const getAnalyticsOverview = async (): Promise<AnalyticsOverviewData> => {
+    const response = await api.get<AnalyticsOverviewData>('/dashboard/analytics/', { headers: getAuthHeader() });
     return response.data;
 };
 
-export const getSystemMetrics = async () => {
-    const response = await api.get('/dashboard/system/', { headers: getAuthHeader() });
+export const getSystemMetrics = async (): Promise<SystemMetrics> => {
+    const response = await api.get<SystemMetrics>('/dashboard/system/', { headers: getAuthHeader() });
     return response.data;
 };
 
-export const getUserOrders = async () => {
-    const response = await api.get('/orders/', { headers: getAuthHeader() });
+export const getUserOrders = async (): Promise<Order[]> => {
+    const response = await api.get<Order[]>('/orders/', { headers: getAuthHeader() });
     return response.data;
 };
 
-export const getUserBookings = async () => {
-    const response = await api.get('/activities/bookings/', { headers: getAuthHeader() });
+export const getUserBookings = async (): Promise<Booking[]> => {
+    const response = await api.get<Booking[]>('/activities/bookings/', { headers: getAuthHeader() });
     return response.data;
 };
 
-export const getUserRescues = async () => {
-    const response = await api.get('/rescues/', { headers: getAuthHeader() });
+export const getUserRescues = async (): Promise<RescueRequest[]> => {
+    const response = await api.get<RescueRequest[]>('/rescues/', { headers: getAuthHeader() });
     return response.data;
 };
 
