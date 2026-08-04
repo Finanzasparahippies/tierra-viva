@@ -16,6 +16,7 @@ class User(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="USER")
     phone = models.CharField(max_length=20, blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Customer ID")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"] # username is still required by AbstractUser but we use email to log in
