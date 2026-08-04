@@ -45,4 +45,4 @@ class UsersAppTests(TestCase):
         response = self.client.get("/api/users/team/")
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.data) > 0)
-        self.assertEqual(response.data[0]["title"], "Cuidador Principal")
+        self.assertEqual(response.data[0]["family_profile"]["title"], "Cuidador Principal")
