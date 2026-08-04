@@ -34,6 +34,33 @@ run_django_cmd_prod() {
     fi
 }
 
+# Helper function to run frontend commands in dev (using exec if running, run --rm if not)
+run_frontend_cmd_dev() {
+    if docker compose ps --services --filter "status=running" | grep -q "^frontend$"; then
+        docker compose exec frontend npm run test -- "$@"
+    else
+        docker compose run --rm frontend npm run test -- "$@"
+    fi
+}
+
+# Helper function to run frontend commands in staging (using exec if running, run --rm if not)
+run_frontend_cmd_staging() {
+    if docker compose --env-file .env.staging -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^frontend-staging$"; then
+        docker compose --env-file .env.staging -f docker-compose.staging.yml exec frontend-staging npm run test -- "$@"
+    else
+        docker compose --env-file .env.staging -f docker-compose.staging.yml run --rm frontend-staging npm run test -- "$@"
+    fi
+}
+
+# Helper function to run frontend commands in prod (using exec if running, run --rm if not)
+run_frontend_cmd_prod() {
+    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^frontend-prod$"; then
+        docker compose -f docker-compose.prod.yml exec frontend-prod npm run test -- "$@"
+    else
+        docker compose -f docker-compose.prod.yml run --rm frontend-prod npm run test -- "$@"
+    fi
+}
+
 # Helper function to find and remove conflicting containers from other project namespaces
 remove_conflicting_containers() {
     local container_names=("$@")
@@ -63,6 +90,7 @@ show_help() {
     echo "  createsuperuser         - Create a Django admin superuser in dev"
     echo "  shell                   - Open backend python shell in dev"
     echo "  test                    - Run backend tests (Dev)"
+    echo "  test-frontend           - Run frontend tests (Dev)"
     echo "  typecheck               - Run TypeScript type-check in Dev frontend"
     echo "  buildcheck              - Run Next.js build check in Dev frontend"
     echo "  frontend                - Run Next.js frontend locally (npm run dev)"
@@ -79,6 +107,7 @@ show_help() {
     echo "  shell-staging           - Open backend python shell in staging"
     echo "  collectstatic-staging   - Compile static assets in staging"
     echo "  test-staging            - Run backend tests (Staging)"
+    echo "  test-frontend-staging   - Run frontend tests (Staging)"
     echo "  typecheck-staging       - Run TypeScript type-check in Staging frontend"
     echo "  buildcheck-staging      - Run Next.js build check in Staging frontend"
     echo ""
@@ -94,6 +123,7 @@ show_help() {
     echo "  createsuperuser-prod    - Create admin superuser in prod"
     echo "  shell-prod              - Open backend python shell in prod"
     echo "  test-prod               - Run backend tests (Prod)"
+    echo "  test-frontend-prod      - Run frontend tests (Prod)"
     echo "  typecheck-prod          - Run TypeScript type-check in Prod frontend"
     echo "  buildcheck-prod         - Run Next.js build check in Prod frontend"
     echo "  certbot                 - Request Let's Encrypt SSL certificate"
@@ -148,6 +178,9 @@ case $COMMAND in
     frontend)
         cd frontend && npm run dev "$@"
         ;;
+    test-frontend|test-frontend-dev|frontend-test)
+        run_frontend_cmd_dev "$@"
+        ;;
     build-staging)
         echo "Building TIERRA VIVA Staging Images..."
         docker compose --env-file .env.staging -f docker-compose.staging.yml build "$@"
@@ -199,6 +232,9 @@ case $COMMAND in
         echo "Running Next.js build-check for Staging frontend..."
         docker compose --env-file .env.staging -f docker-compose.staging.yml run --rm frontend-staging npm run build "$@"
         ;;
+    test-frontend-staging|frontend-test-staging)
+        run_frontend_cmd_staging "$@"
+        ;;
     build)
         echo "Building TIERRA VIVA Production Images..."
         docker compose -f docker-compose.prod.yml build "$@"
@@ -243,8 +279,11 @@ case $COMMAND in
         docker compose -f docker-compose.prod.yml run --rm frontend-prod npx tsc --noEmit "$@"
         ;;
     buildcheck-prod)
-        echo "Running Next.js build-check for Prod frontend..."
+        echo "Running Next.js build-check for Prod frontend tests..."
         docker compose -f docker-compose.prod.yml run --rm frontend-prod npm run build "$@"
+        ;;
+    test-frontend-prod|frontend-test-prod)
+        run_frontend_cmd_prod "$@"
         ;;
     collectstatic)
         echo "Running collectstatic..."
