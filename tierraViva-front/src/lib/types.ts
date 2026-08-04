@@ -382,6 +382,7 @@ export interface Order {
     paid: boolean;
     status: 'PENDING' | 'PAID' | 'CANCELLED';
     total_cost: number;
+    stripe_payment_intent?: string;
 }
 
 
