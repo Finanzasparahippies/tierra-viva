@@ -71,15 +71,92 @@ def stripe_webhook(request):
         except Exception:
             return HttpResponse("Event processing in progress", status=200)
 
-    # Handle the event
-    if event['type'] == 'checkout.session.completed':
+    # Handle the event types
+    if event['type'] in ['checkout.session.completed', 'payment_intent.succeeded']:
         session = event['data']['object']
         handle_successful_payment(session)
+    elif event['type'] in ['payment_intent.payment_failed', 'checkout.session.expired']:
+        session = event['data']['object']
+        handle_failed_payment(session)
+    elif event['type'] == 'customer.subscription.deleted':
+        subscription = event['data']['object']
+        handle_subscription_deleted(subscription)
+    elif event['type'] == 'customer.subscription.updated':
+        subscription = event['data']['object']
+        handle_subscription_updated(subscription)
 
     return HttpResponse(status=200)
 
+def handle_failed_payment(session):
+    session_id = session.get('id')
+    payment_intent_id = session.get('payment_intent')
+    import logging
+    logger = logging.getLogger("apps")
+    logger.info(f"[Webhook] Payment failed or expired for session={session_id}, payment_intent={payment_intent_id}")
+
+    from shop.models import Order
+    from activities.models import Booking
+    from sponsorship.models import Sponsorship
+    
+    if session_id:
+        Order.objects.filter(stripe_payment_intent=session_id, status='PENDING').update(status='CANCELLED')
+        Booking.objects.filter(stripe_payment_intent=session_id, status='PENDING').update(status='CANCELLED')
+        Sponsorship.objects.filter(stripe_payment_intent=session_id, active=True).update(active=False)
+    if payment_intent_id:
+        Order.objects.filter(stripe_payment_intent=payment_intent_id, status='PENDING').update(status='CANCELLED')
+        Booking.objects.filter(stripe_payment_intent=payment_intent_id, status='PENDING').update(status='CANCELLED')
+        Sponsorship.objects.filter(stripe_payment_intent=payment_intent_id, active=True).update(active=False)
+
+def handle_subscription_deleted(subscription):
+    sub_id = subscription.get('id')
+    import logging
+    logger = logging.getLogger("apps")
+    if sub_id:
+        from sponsorship.models import Sponsorship
+        try:
+            sponsorships = Sponsorship.objects.filter(stripe_subscription_id=sub_id, active=True)
+            if sponsorships.exists():
+                sponsorships.update(active=False)
+                logger.info(f"[Webhook] Subscription {sub_id} deleted. Sponsorships deactivated.")
+            else:
+                logger.info(f"[Webhook] Subscription {sub_id} deleted but no active sponsorship found in DB.")
+        except Exception as e:
+            logger.error(f"[Webhook] Error processing customer.subscription.deleted for {sub_id}: {e}")
+
+def handle_subscription_updated(subscription):
+    sub_id = subscription.get('id')
+    status = subscription.get('status')
+    import logging
+    logger = logging.getLogger("apps")
+    if sub_id:
+        from sponsorship.models import Sponsorship
+        try:
+            is_active = status in ['active', 'trialing']
+            sponsorships = Sponsorship.objects.filter(stripe_subscription_id=sub_id)
+            if sponsorships.exists():
+                sponsorships.update(active=is_active)
+                logger.info(f"[Webhook] Subscription {sub_id} updated to status={status}. Sponsorships active state set to {is_active}.")
+        except Exception as e:
+            logger.error(f"[Webhook] Error processing customer.subscription.updated for {sub_id}: {e}")
+
 def handle_successful_payment(session):
+    import logging
+    logger = logging.getLogger("apps")
+
     metadata = session.get('metadata', {})
+    session_id = session.get('id')
+
+    # Security check/Metadata recovery pattern
+    if not metadata and (session.get('object') == 'payment_intent' or (session_id and session_id.startswith('pi_'))):
+        try:
+            sessions = stripe.checkout.Session.list(payment_intent=session_id, limit=1)
+            if sessions and sessions.data:
+                checkout_session = sessions.data[0]
+                metadata = checkout_session.get('metadata', {})
+                session_id = checkout_session.id
+        except Exception as e:
+            logger.error(f"[Webhook] Error retrieving Stripe checkout session for payment intent {session_id}: {e}")
+
     user_id = metadata.get('user_id')
     
     # Handle Shop Order
@@ -90,10 +167,10 @@ def handle_successful_payment(session):
         try:
             with transaction.atomic():
                 order = Order.objects.select_for_update().get(id=order_id)
-                order.complete_payment(session.get('payment_intent'))
+                order.complete_payment(session.get('payment_intent') or session.get('id'))
             return
         except Order.DoesNotExist:
-            print(f"Order {order_id} not found")
+            logger.error(f"Order {order_id} not found")
 
     # Handle Activity Booking
     booking_id = metadata.get('booking_id')
@@ -106,7 +183,7 @@ def handle_successful_payment(session):
                 booking = Booking.objects.select_for_update().get(id=booking_id)
                 if booking.status != 'PAID':
                     booking.status = 'PAID'
-                    booking.stripe_payment_intent = session.get('payment_intent')
+                    booking.stripe_payment_intent = session.get('payment_intent') or session.get('id')
                     booking.save()
                     
                     # Reduce capacity
@@ -119,9 +196,9 @@ def handle_successful_payment(session):
                     transaction.on_commit(lambda: send_booking_ticket_email(booking))
             return
         except Booking.DoesNotExist:
-            print(f"Booking {booking_id} not found")
+            logger.error(f"Booking {booking_id} not found")
         except Exception as e:
-            print(f"Error updating booking {booking_id}: {e}")
+            logger.error(f"Error updating booking {booking_id}: {e}")
 
     # Handle Sponsorship
     tier_id = metadata.get('tier_id')
@@ -140,14 +217,14 @@ def handle_successful_payment(session):
                 animal = Animal.objects.get(id=animal_id)
             
             sub_id = session.get('subscription')
-            pi_id = session.get('payment_intent')
+            pi_id = session.get('payment_intent') or session.get('id')
             
             # Prevent duplicate sponsorships
             if sub_id and Sponsorship.objects.filter(stripe_subscription_id=sub_id).exists():
-                print(f"Sponsorship with subscription {sub_id} already exists")
+                logger.info(f"Sponsorship with subscription {sub_id} already exists")
                 return
             if pi_id and Sponsorship.objects.filter(stripe_payment_intent=pi_id).exists():
-                print(f"Sponsorship with payment intent {pi_id} already exists")
+                logger.info(f"Sponsorship with payment intent {pi_id} already exists")
                 return
             
             Sponsorship.objects.create(
@@ -161,7 +238,7 @@ def handle_successful_payment(session):
                 active=True
             )
     except Exception as e:
-        print(f"Error handling webhook payment: {e}")
+        logger.error(f"Error handling webhook payment: {e}")
 
 
 class RanchUpdateListView(APIView):

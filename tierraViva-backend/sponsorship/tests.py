@@ -126,4 +126,42 @@ class SponsorshipTests(TestCase):
         # Verify still only 1 sponsorship exists
         self.assertEqual(Sponsorship.objects.filter(stripe_subscription_id='sub_test_idempotency').count(), 1)
 
+    @patch('stripe.Webhook.construct_event')
+    def test_stripe_webhook_subscription_deleted(self, mock_construct_event):
+        # Create an active sponsorship with sub ID
+        sponsorship = Sponsorship.objects.create(
+            user=self.user1,
+            animal=self.animal,
+            tier=self.tier,
+            amount=500.00,
+            stripe_subscription_id='sub_to_delete',
+            active=True
+        )
+        
+        # Setup mock event
+        mock_event = {
+            'id': 'evt_delete_123',
+            'type': 'customer.subscription.deleted',
+            'data': {
+                'object': {
+                    'id': 'sub_to_delete',
+                    'status': 'canceled'
+                }
+            }
+        }
+        mock_construct_event.return_value = mock_event
+        
+        response = self.client.post('/api/sponsorship/webhook/', data=json.dumps(mock_event), content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify sponsorship is deactivated
+        sponsorship.refresh_from_db()
+        self.assertFalse(sponsorship.active)
+
+    def test_get_or_create_stripe_customer_helper(self):
+        from sponsorship.utils import get_or_create_stripe_customer
+        # Since settings.TESTING is True, should return mock_cus_123
+        cus_id = get_or_create_stripe_customer(self.user1)
+        self.assertEqual(cus_id, "mock_cus_123")
+
 

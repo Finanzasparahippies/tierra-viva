@@ -53,6 +53,9 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not use_mock:
             try:
+                from sponsorship.utils import get_or_create_stripe_customer
+                customer_id = get_or_create_stripe_customer(request.user)
+
                 # 2. Create Stripe Checkout Session
                 checkout_session = stripe.checkout.Session.create(
                     payment_method_types=['card'],
@@ -70,7 +73,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
                     mode='payment',
                     success_url=f"{settings.FRONTEND_URL}/activities/success?booking_id={booking.id}",
                     cancel_url=f"{settings.FRONTEND_URL}/activities/cancel",
-                    customer_email=request.user.email,
+                    customer=customer_id,
                     metadata={
                         'booking_id': booking.id,
                         'type': 'activity_booking'
