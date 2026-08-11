@@ -403,19 +403,29 @@ export const deleteProduct = async (id: number): Promise<void> => {
     await api.delete(`/products/${id}/`, { headers: getAuthHeader() });
 };
 
-// Activities
-export const createActivity = async (data: any): Promise<Activity> => {
-    const response = await api.post<Activity>('/activities/', data, { headers: getAuthHeader() });
+// Blog Posts
+export const getBlogPosts = async (): Promise<BlogPost[]> => {
+    try {
+        const response = await api.get<BlogPost[]>('/blog/posts/');
+        return response.data;
+    } catch (error) {
+        console.error("API Error [getBlogPosts]:", error);
+        return [];
+    }
+};
+
+export const createBlogPost = async (data: any): Promise<BlogPost> => {
+    const response = await api.post<BlogPost>('/blog/posts/', data, { headers: getAuthHeader() });
     return response.data;
 };
 
-export const updateActivity = async (id: number, data: any): Promise<Activity> => {
-    const response = await api.patch<Activity>(`/activities/${id}/`, data, { headers: getAuthHeader() });
+export const updateBlogPost = async (id: number | string, data: any): Promise<BlogPost> => {
+    const response = await api.patch<BlogPost>(`/blog/posts/${id}/`, data, { headers: getAuthHeader() });
     return response.data;
 };
 
-export const deleteActivity = async (id: number): Promise<void> => {
-    await api.delete(`/activities/${id}/`, { headers: getAuthHeader() });
+export const deleteBlogPost = async (id: number | string): Promise<void> => {
+    await api.delete(`/blog/posts/${id}/`, { headers: getAuthHeader() });
 };
 
 export default api;

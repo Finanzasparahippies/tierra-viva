@@ -10,14 +10,15 @@ import {
     getProducts, createProduct, updateProduct, deleteProduct,
     getTiers, createTier, updateTier, deleteTier,
     getActivities, createActivity, updateActivity, deleteActivity,
-    getRanchUpdates, createRanchUpdate, updateRanchUpdate, deleteRanchUpdate
+    getRanchUpdates, createRanchUpdate, updateRanchUpdate, deleteRanchUpdate,
+    getBlogPosts, createBlogPost, updateBlogPost, deleteBlogPost
 } from "@/lib/api";
 import { 
-    Animal, Species, Product, SponsorshipTier, Activity, RanchUpdate 
+    Animal, Species, Product, SponsorshipTier, Activity, RanchUpdate, BlogPost 
 } from "@/lib/types";
 import { 
     Settings, Heart, Trash, Edit, Plus, CheckCircle, AlertCircle, 
-    Layers, ShoppingBag, ShieldAlert, Sparkles, BookOpen, Star
+    Layers, ShoppingBag, ShieldAlert, Sparkles, BookOpen, Star, FileText
 } from "lucide-react";
 
 export default function AdminConfigPage() {
@@ -26,7 +27,7 @@ export default function AdminConfigPage() {
     const isStaff = user?.is_staff || false;
     const canConfigure = role === "ADMIN" || role === "FAMILY" || isStaff;
 
-    const [activeTab, setActiveTab] = useState<"animals" | "species" | "products" | "tiers" | "activities" | "updates">("animals");
+    const [activeTab, setActiveTab] = useState<"animals" | "species" | "products" | "tiers" | "activities" | "updates" | "blog">("animals");
 
     // General Lists State
     const [animals, setAnimals] = useState<Animal[]>([]);
@@ -35,6 +36,7 @@ export default function AdminConfigPage() {
     const [tiers, setTiers] = useState<SponsorshipTier[]>([]);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [updates, setUpdates] = useState<RanchUpdate[]>([]);
+    const [posts, setPosts] = useState<BlogPost[]>([]);
 
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -75,6 +77,9 @@ export default function AdminConfigPage() {
             } else if (activeTab === "updates") {
                 const data = await getRanchUpdates();
                 setUpdates(data);
+            } else if (activeTab === "blog") {
+                const data = await getBlogPosts();
+                setPosts(data);
             }
         } catch (err) {
             console.error("Error loading data:", err);
@@ -92,7 +97,7 @@ export default function AdminConfigPage() {
     const handleOpenCreate = () => {
         setIsEditing(false);
         setEditingId(null);
-        setFormData({});
+        setFormData(activeTab === "blog" ? { is_public: true, is_sponsor_only: false } : {});
         setShowForm(true);
     };
 
@@ -103,17 +108,18 @@ export default function AdminConfigPage() {
         setShowForm(true);
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: number | string) => {
         if (!confirm("¿Estás seguro de eliminar este registro?")) return;
         setLoading(true);
         setErrorMessage(null);
         try {
-            if (activeTab === "animals") await deleteAnimal(id);
-            else if (activeTab === "species") await deleteSpecies(id);
-            else if (activeTab === "products") await deleteProduct(id);
-            else if (activeTab === "tiers") await deleteTier(id);
-            else if (activeTab === "activities") await deleteActivity(id);
-            else if (activeTab === "updates") await deleteRanchUpdate(id);
+            if (activeTab === "animals") await deleteAnimal(id as number);
+            else if (activeTab === "species") await deleteSpecies(id as number);
+            else if (activeTab === "products") await deleteProduct(id as number);
+            else if (activeTab === "tiers") await deleteTier(id as number);
+            else if (activeTab === "activities") await deleteActivity(id as number);
+            else if (activeTab === "updates") await deleteRanchUpdate(id as number);
+            else if (activeTab === "blog") await deleteBlogPost(id);
 
             triggerSuccess("Registro eliminado correctamente.");
             loadData();
@@ -166,6 +172,12 @@ export default function AdminConfigPage() {
                 } else {
                     await createRanchUpdate(formData);
                 }
+            } else if (activeTab === "blog") {
+                if (isEditing && editingId) {
+                    await updateBlogPost(editingId, formData);
+                } else {
+                    await createBlogPost(formData);
+                }
             }
 
             triggerSuccess(isEditing ? "Registro actualizado correctamente." : "Registro creado correctamente.");
@@ -199,7 +211,7 @@ export default function AdminConfigPage() {
                         Configuración de Aplicaciones
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
-                        Modifica los animales, productos, suscripciones y actividades del santuario desde una sola interfaz.
+                        Modifica los animales, productos, suscripciones, bitácoras y artículos de blog desde una sola interfaz.
                     </p>
                 </div>
                 <Button onClick={handleOpenCreate} className="mt-4 md:mt-0 font-bold gap-2 rounded-full">
@@ -215,7 +227,8 @@ export default function AdminConfigPage() {
                     { id: "products", label: "Productos Tienda", icon: ShoppingBag },
                     { id: "tiers", label: "Apadrinamientos (Tiers)", icon: Heart },
                     { id: "activities", label: "Actividades", icon: Star },
-                    { id: "updates", label: "Historias & Blog", icon: BookOpen }
+                    { id: "updates", label: "Historias Rancho", icon: FileText },
+                    { id: "blog", label: "Artículos Blog", icon: BookOpen }
                 ].map((tab) => {
                     const Icon = tab.icon;
                     return (
@@ -260,42 +273,48 @@ export default function AdminConfigPage() {
                     </h3>
                     <form onSubmit={handleFormSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Standard text name / title fields depending on model */}
-                            {(activeTab === "animals" || activeTab === "species" || activeTab === "products" || activeTab === "tiers") && (
+                            {/* Title / Name */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    {activeTab === "updates" || activeTab === "blog" || activeTab === "activities" ? "Título" : "Nombre"}
+                                </label>
+                                <Input
+                                    value={formData.name || formData.title || ""}
+                                    onChange={(e) => {
+                                        if (activeTab === "updates" || activeTab === "blog" || activeTab === "activities") {
+                                            setFormData({ ...formData, title: e.target.value });
+                                        } else {
+                                            setFormData({ ...formData, name: e.target.value });
+                                        }
+                                    }}
+                                    placeholder="Nombre o Título"
+                                    required
+                                />
+                            </div>
+
+                            {/* Optional Slug for Blog */}
+                            {activeTab === "blog" && (
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Nombre</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Slug (Opcional)</label>
                                     <Input
-                                        value={formData.name || ""}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="Nombre del registro"
-                                        required
+                                        value={formData.slug || ""}
+                                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                        placeholder="Generado automáticamente si se deja en blanco"
                                     />
                                 </div>
                             )}
 
-                            {(activeTab === "activities" || activeTab === "updates") && (
+                            {/* Price for products, animals, tiers, activities */}
+                            {activeTab !== "species" && activeTab !== "updates" && activeTab !== "blog" && (
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Título</label>
-                                    <Input
-                                        value={formData.title || ""}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        placeholder="Título de la entrada"
-                                        required
-                                    />
-                                </div>
-                            )}
-
-                            {/* Prices for Products, Tiers, Activities */}
-                            {(activeTab === "products" || activeTab === "tiers" || activeTab === "activities") && (
-                                <div className="space-y-1">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Precio (MXN)</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Precio / Cuota</label>
                                     <Input
                                         type="number"
                                         step="0.01"
                                         value={formData.price || ""}
                                         onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                                         placeholder="0.00"
-                                        required
+                                        required={activeTab !== "animals"}
                                     />
                                 </div>
                             )}
@@ -303,29 +322,28 @@ export default function AdminConfigPage() {
                             {/* Stock for Products */}
                             {activeTab === "products" && (
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Stock</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Stock Inicial</label>
                                     <Input
                                         type="number"
-                                        value={formData.stock || ""}
+                                        value={formData.stock || 0}
                                         onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
-                                        placeholder="Inventario disponible"
+                                        placeholder="Stock"
                                         required
                                     />
                                 </div>
                             )}
 
-                            {/* Species ID selector for Animals */}
+                            {/* Species selector for Animals */}
                             {activeTab === "animals" && (
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Especie</label>
                                     <select
-                                        className="w-full p-2 border rounded-md bg-card"
+                                        className="w-full p-2 border rounded-md bg-card text-foreground"
                                         value={formData.species || ""}
                                         onChange={(e) => setFormData({ ...formData, species: parseInt(e.target.value) })}
                                         required
                                     >
                                         <option value="">Selecciona Especie</option>
-                                        {/* Fallback mock list or list loaded */}
                                         <option value="1">Caballos</option>
                                         <option value="2">Perros</option>
                                         <option value="3">Gatos</option>
@@ -379,27 +397,53 @@ export default function AdminConfigPage() {
                         {activeTab !== "species" && (
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    {activeTab === "updates" ? "Contenido" : "Descripción"}
+                                    {activeTab === "updates" || activeTab === "blog" ? "Contenido / Artículo" : "Descripción"}
                                 </label>
                                 <textarea
                                     className="w-full p-2 border rounded-xl bg-card text-foreground"
-                                    rows={4}
+                                    rows={5}
                                     value={formData.description || formData.content || ""}
                                     onChange={(e) => {
-                                        if (activeTab === "updates") {
+                                        if (activeTab === "updates" || activeTab === "blog") {
                                             setFormData({ ...formData, content: e.target.value });
                                         } else {
                                             setFormData({ ...formData, description: e.target.value });
                                         }
                                     }}
-                                    placeholder="Detalles sobre el registro..."
+                                    placeholder="Detalles sobre el registro o contenido del post..."
                                     required
                                 />
                             </div>
                         )}
 
-                        {/* Active switch */}
-                        {activeTab !== "species" && activeTab !== "updates" && (
+                        {/* Blog Toggles */}
+                        {activeTab === "blog" && (
+                            <div className="flex flex-wrap gap-6 pt-1">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="is_public"
+                                        checked={formData.is_public !== false}
+                                        onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                                        className="w-4 h-4 rounded text-primary accent-primary"
+                                    />
+                                    <label htmlFor="is_public" className="text-sm font-bold">Público en Landing</label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="is_sponsor_only"
+                                        checked={!!formData.is_sponsor_only}
+                                        onChange={(e) => setFormData({ ...formData, is_sponsor_only: e.target.checked })}
+                                        className="w-4 h-4 rounded text-primary accent-primary"
+                                    />
+                                    <label htmlFor="is_sponsor_only" className="text-sm font-bold">Exclusivo Patrocinadores</label>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Active switch for other entities */}
+                        {activeTab !== "species" && activeTab !== "updates" && activeTab !== "blog" && (
                             <div className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
@@ -436,11 +480,13 @@ export default function AdminConfigPage() {
                                 <tr className="border-b text-muted-foreground text-xs uppercase font-black tracking-widest">
                                     <th className="py-4 px-4">ID</th>
                                     <th className="py-4 px-4">Nombre / Título</th>
-                                    {activeTab !== "species" && activeTab !== "updates" && <th className="py-4 px-4">Precio</th>}
+                                    {activeTab !== "species" && activeTab !== "updates" && activeTab !== "blog" && <th className="py-4 px-4">Precio</th>}
                                     {activeTab === "products" && <th className="py-4 px-4">Stock</th>}
                                     {activeTab === "tiers" && <th className="py-4 px-4">Nivel</th>}
                                     {activeTab === "updates" && <th className="py-4 px-4">Nivel Mín.</th>}
-                                    {activeTab !== "species" && activeTab !== "updates" && <th className="py-4 px-4">Estado</th>}
+                                    {activeTab === "blog" && <th className="py-4 px-4">Autor</th>}
+                                    {activeTab === "blog" && <th className="py-4 px-4">Estado</th>}
+                                    {activeTab !== "species" && activeTab !== "updates" && activeTab !== "blog" && <th className="py-4 px-4">Estado</th>}
                                     <th className="py-4 px-4 text-right">Acciones</th>
                                 </tr>
                             </thead>
@@ -541,6 +587,28 @@ export default function AdminConfigPage() {
                                         <td className="py-4 px-4 font-mono text-xs">#{item.id}</td>
                                         <td className="py-4 px-4 text-foreground font-bold">{item.title}</td>
                                         <td className="py-4 px-4 font-mono">{item.min_tier_level}</td>
+                                        <td className="py-4 px-4 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button size="icon" variant="ghost" onClick={() => handleOpenEdit(item)}><Edit className="h-4 w-4" /></Button>
+                                                <Button size="icon" variant="ghost" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10"><Trash className="h-4 w-4" /></Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+
+                                {activeTab === "blog" && posts.map((item) => (
+                                    <tr key={item.id} className="border-b hover:bg-muted/10 font-medium">
+                                        <td className="py-4 px-4 font-mono text-xs">#{item.id}</td>
+                                        <td className="py-4 px-4 text-foreground font-bold">
+                                            {item.title}
+                                            <span className="block text-xs font-mono text-muted-foreground font-normal">/{item.slug}</span>
+                                        </td>
+                                        <td className="py-4 px-4 text-xs text-muted-foreground">{item.author_name || item.author}</td>
+                                        <td className="py-4 px-4">
+                                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase ${item.is_public ? "bg-green-500/10 text-green-500" : "bg-destructive/10 text-destructive"}`}>
+                                                {item.is_public ? "Público" : "Borrador"}
+                                            </span>
+                                        </td>
                                         <td className="py-4 px-4 text-right">
                                             <div className="flex justify-end gap-2">
                                                 <Button size="icon" variant="ghost" onClick={() => handleOpenEdit(item)}><Edit className="h-4 w-4" /></Button>
