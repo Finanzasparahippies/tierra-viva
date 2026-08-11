@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import { CheckoutSessionRequest, CheckoutSessionResponse } from '@/types/domain';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useToast } from '@/components/ui/Toast';
+import api from '@/lib/api';
 
 interface StripeCheckoutButtonProps {
   tierId?: number;
@@ -24,9 +27,17 @@ export const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { isAuthenticated, token } = useAuthStore();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const handleCheckout = async () => {
     if (loading) return;
+
+    if (!isAuthenticated || !token) {
+      toastWarning("Sesión requerida", "Por favor inicia sesión para apadrinar a un animal.");
+      return;
+    }
+
     setLoading(true);
     setErrorMessage(null);
 
@@ -39,20 +50,9 @@ export const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
         cancel_url: typeof window !== 'undefined' ? `${window.location.origin}/cancelar` : undefined,
       };
 
-      const response = await fetch('/api/sponsorship/checkout/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await api.post<CheckoutSessionResponse>('/sponsorship/checkout/', payload);
+      const data = response.data;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error || `Error en el servidor (${response.status})`);
-      }
-
-      const data: CheckoutSessionResponse = await response.json();
       if (data?.checkout_url) {
         if (onSuccessRedirect) {
           onSuccessRedirect(data.checkout_url);
@@ -62,8 +62,18 @@ export const StripeCheckoutButton: React.FC<StripeCheckoutButtonProps> = ({
       } else {
         throw new Error('No se recibió la URL de Stripe Checkout.');
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Ocurrió un error inesperado al conectar con Stripe.';
+    } catch (err: any) {
+      const status = err?.response?.status;
+      let msg = 'Ocurrió un error inesperado al conectar con Stripe.';
+      
+      if (status === 401) {
+        msg = 'Tu sesión ha caducado. Por favor vuelve a iniciar sesión.';
+        toastWarning('Sesión expirada', msg);
+      } else {
+        msg = err?.response?.data?.error || err?.message || msg;
+        toastError('Error de Pasarela', msg);
+      }
+
       setErrorMessage(msg);
       if (onError) {
         onError(msg);

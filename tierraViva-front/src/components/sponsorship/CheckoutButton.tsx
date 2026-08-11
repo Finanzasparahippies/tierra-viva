@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createCheckoutSession } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useToast } from "@/components/ui/Toast";
 
 interface CheckoutButtonProps {
     animalId?: number;
@@ -22,20 +24,31 @@ export default function CheckoutButton({
     className = ""
 }: CheckoutButtonProps) {
     const [loading, setLoading] = useState(false);
+    const { isAuthenticated, token } = useAuthStore();
+    const { error: toastError, warning: toastWarning } = useToast();
 
     const handleCheckout = async () => {
+        if (!isAuthenticated || !token) {
+            toastWarning("Sesión requerida", "Por favor inicia sesión para apadrinar a un animal.");
+            return;
+        }
+
         try {
             setLoading(true);
             const data = await createCheckoutSession(tierId, animalId, is_annual);
-            if (data.checkout_url) {
+            if (data?.checkout_url) {
                 window.location.href = data.checkout_url;
             } else {
-                console.error("No checkout URL returned", data);
-                alert("Ocurrió un error al obtener la URL de pago.");
+                toastError("Error de pago", "Ocurrió un inconveniente al generar la sesión con Stripe.");
             }
-        } catch (error) {
-            console.error("Error creating checkout session:", error);
-            alert("Debes iniciar sesión para poder apadrinar.");
+        } catch (error: any) {
+            const status = error?.response?.status;
+            if (status === 401) {
+                toastWarning("Sesión expirada", "Tu sesión ha caducado. Inicia sesión nuevamente.");
+            } else {
+                const msg = error?.response?.data?.error || "Error al procesar la solicitud de pago.";
+                toastError("Error de Pasarela", msg);
+            }
         } finally {
             setLoading(false);
         }

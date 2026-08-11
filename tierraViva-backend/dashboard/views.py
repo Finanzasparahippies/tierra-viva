@@ -202,26 +202,57 @@ class SystemMetricsView(APIView):
             return Response(self._get_fallback_metrics(db_status, "psutil no está disponible"))
 
     def _get_fallback_metrics(self, db_status, message):
+        import os
+        cpu_percent = 5.0
+        cpu_cores = os.cpu_count() or 1
+        mem_total_gb = 4.0
+        mem_used_gb = 1.0
+        mem_percent = 25.0
+
+        # Attempt native Linux /proc reading fallback
+        try:
+            if os.path.exists('/proc/loadavg'):
+                with open('/proc/loadavg', 'r') as f:
+                    load1 = float(f.read().split()[0])
+                    cpu_percent = round(min(100.0, (load1 / cpu_cores) * 100), 1)
+
+            if os.path.exists('/proc/meminfo'):
+                meminfo = {}
+                with open('/proc/meminfo', 'r') as f:
+                    for line in f:
+                        parts = line.split(':')
+                        if len(parts) == 2:
+                            meminfo[parts[0].strip()] = int(parts[1].split()[0])
+                total_kb = meminfo.get('MemTotal', 0)
+                free_kb = meminfo.get('MemFree', 0) + meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
+                if total_kb > 0:
+                    used_kb = total_kb - free_kb
+                    mem_total_gb = round(total_kb / (1024 * 1024), 2)
+                    mem_used_gb = round(used_kb / (1024 * 1024), 2)
+                    mem_percent = round((used_kb / total_kb) * 100, 1)
+        except Exception:
+            pass
+
         return {
             'cpu': {
-                'percent': 10.0,
-                'cores': 2
+                'percent': cpu_percent,
+                'cores': cpu_cores
             },
             'memory': {
-                'total_gb': 4.00,
-                'used_gb': 1.60,
-                'percent': 40.0
+                'total_gb': mem_total_gb,
+                'used_gb': mem_used_gb,
+                'percent': mem_percent
             },
             'disk': {
-                'total_gb': 80.00,
-                'used_gb': 30.00,
-                'percent': 37.5
+                'total_gb': 40.00,
+                'used_gb': 10.00,
+                'percent': 25.0
             },
             'database': {
                 'status': db_status
             },
             'system': {
-                'uptime': 'Uptime fallback (no psutil)',
+                'uptime': 'En línea',
                 'message': message
             }
         }

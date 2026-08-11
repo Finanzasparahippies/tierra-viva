@@ -215,7 +215,7 @@ export default function AdminConfigPage() {
                     { id: "products", label: "Productos Tienda", icon: ShoppingBag },
                     { id: "tiers", label: "Apadrinamientos (Tiers)", icon: Heart },
                     { id: "activities", label: "Actividades", icon: Star },
-                    { id: "updates", label: "Actualizaciones (Blog)", icon: BookOpen }
+                    { id: "updates", label: "Historias & Blog", icon: BookOpen }
                 ].map((tab) => {
                     const Icon = tab.icon;
                     return (

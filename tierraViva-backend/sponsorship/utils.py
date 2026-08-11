@@ -138,9 +138,18 @@ def create_stripe_product_and_price(tier):
 def get_checkout_session(user, tier, success_url, cancel_url, animal_id=None, is_annual=False):
     """
     Creates a Stripe Checkout Session for a sponsorship.
+    Auto-regenerates Stripe Product and Prices if the stored price_id is invalid or missing in Stripe.
     """
+    import logging
+    logger = logging.getLogger("apps")
+
+    # If tier has missing prices, generate them
     if not tier.stripe_price_id or (tier.type == "SUBSCRIPTION" and is_annual and not tier.stripe_price_id_annual):
-        tier.save()
+        prices = create_stripe_product_and_price(tier)
+        tier.stripe_price_id = prices.get('monthly')
+        if tier.type == "SUBSCRIPTION":
+            tier.stripe_price_id_annual = prices.get('annual')
+        tier.save(update_fields=['stripe_price_id', 'stripe_price_id_annual'])
 
     metadata = {
         "user_id": user.id,
@@ -153,18 +162,33 @@ def get_checkout_session(user, tier, success_url, cancel_url, animal_id=None, is
     price_id = tier.stripe_price_id_annual if is_annual and tier.stripe_price_id_annual else tier.stripe_price_id
     customer_id = get_or_create_stripe_customer(user)
 
-    session_data = {
-        "payment_method_types": ["card"],
-        "line_items": [{
-            "price": price_id,
-            "quantity": 1,
-        }],
-        "mode": "subscription" if tier.type == "SUBSCRIPTION" else "payment",
-        "success_url": success_url,
-        "cancel_url": cancel_url,
-        "customer": customer_id,
-        "metadata": metadata,
-    }
-    
-    session = stripe.checkout.Session.create(**session_data)
-    return session
+    def _create_session(pid):
+        return stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price": pid,
+                "quantity": 1,
+            }],
+            mode="subscription" if tier.type == "SUBSCRIPTION" else "payment",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            customer=customer_id,
+            metadata=metadata,
+        )
+
+    try:
+        return _create_session(price_id)
+    except stripe.error.InvalidRequestError as err:
+        err_msg = str(err)
+        if "No such price" in err_msg or getattr(err, 'code', '') == "resource_missing" or "invalid" in err_msg.lower():
+            logger.warning(f"Stripe price '{price_id}' invalid for Tier '{tier.name}' ({tier.id}). Regenerating prices... Error: {err_msg}")
+            prices = create_stripe_product_and_price(tier)
+            tier.stripe_price_id = prices.get('monthly')
+            if tier.type == "SUBSCRIPTION":
+                tier.stripe_price_id_annual = prices.get('annual')
+            tier.save(update_fields=['stripe_price_id', 'stripe_price_id_annual'])
+            
+            new_price_id = tier.stripe_price_id_annual if is_annual and tier.stripe_price_id_annual else tier.stripe_price_id
+            logger.info(f"Retrying Stripe Checkout Session with new price '{new_price_id}' for Tier '{tier.name}'.")
+            return _create_session(new_price_id)
+        raise err
