@@ -403,6 +403,21 @@ export const deleteProduct = async (id: number): Promise<void> => {
     await api.delete(`/products/${id}/`, { headers: getAuthHeader() });
 };
 
+// Activities
+export const createActivity = async (data: any): Promise<Activity> => {
+    const response = await api.post<Activity>('/activities/', data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const updateActivity = async (id: number, data: any): Promise<Activity> => {
+    const response = await api.patch<Activity>(`/activities/${id}/`, data, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const deleteActivity = async (id: number): Promise<void> => {
+    await api.delete(`/activities/${id}/`, { headers: getAuthHeader() });
+};
+
 // Blog Posts
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
     try {
