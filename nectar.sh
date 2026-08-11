@@ -1,86 +1,172 @@
 #!/bin/bash
 
-COMMAND=$1
-SERVICE=$2
+# Nectar Labs CLI for TIERRA VIVA
+# Script to manage TIERRA VIVA docker/podman environment easily
 
+COMMAND=$1
 if [ $# -gt 0 ]; then
     shift
 fi
 
-# Helper function to run Django commands in dev (using exec if running, run --rm if not)
+# Detect Container runtime (docker or podman)
+if command -v docker &> /dev/null; then
+    DOCKER_BIN="docker"
+elif command -v podman &> /dev/null; then
+    DOCKER_BIN="podman"
+else
+    echo "==========================================="
+    echo "  [ERROR] No container runtime detected!   "
+    echo "==========================================="
+    echo "No se encontró ni 'docker' ni 'podman' en el PATH del sistema."
+    echo ""
+    echo "Si estás en Fedora Linux, instala Podman + Compose ejecutando:"
+    echo "  sudo dnf install -y podman-docker podman-compose"
+    echo ""
+    echo "O bien instala Docker Engine oficial."
+    exit 1
+fi
+
+# Detect Compose provider
+COMPOSE_BIN=""
+if [ "$DOCKER_BIN" = "docker" ]; then
+    if docker compose version &> /dev/null; then
+        COMPOSE_BIN="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_BIN="docker-compose"
+    fi
+elif [ "$DOCKER_BIN" = "podman" ]; then
+    if command -v podman-compose &> /dev/null; then
+        COMPOSE_BIN="podman-compose"
+    elif podman compose version &> /dev/null 2>&1; then
+        COMPOSE_BIN="podman compose"
+    fi
+fi
+
+if [ -z "$COMPOSE_BIN" ]; then
+    echo "==========================================="
+    echo "  [ERROR] No Compose provider detected!    "
+    echo "==========================================="
+    echo "Se detectó '${DOCKER_BIN}', pero no se encontró un proveedor de Compose (docker-compose / podman-compose)."
+    echo ""
+    echo "Si estás en Fedora Linux, instala podman-compose y podman-docker ejecutando:"
+    echo "  sudo dnf install -y podman-compose podman-docker"
+    echo ""
+    echo "O si prefieres Docker oficial, instala docker-ce y docker-compose-plugin."
+    exit 1
+fi
+
+# Helper function to run Django commands in dev
 run_django_cmd_dev() {
-    if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
-        docker compose exec backend python manage.py "$@"
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-dev_backend"; then
+        $DOCKER_BIN exec $tty_flag tierraviva-dev_backend python manage.py "$@"
+    elif $COMPOSE_BIN ps 2>/dev/null | grep -q "backend"; then
+        $COMPOSE_BIN exec $tty_flag backend python manage.py "$@"
     else
-        docker compose run --rm backend python manage.py "$@"
+        $COMPOSE_BIN run --rm $tty_flag -w /app backend python manage.py "$@"
     fi
 }
 
-# Helper function to run Django commands in staging (using exec if running, run --rm if not)
+# Helper function to run Django commands in staging
 run_django_cmd_staging() {
-    if docker compose --env-file .env.staging -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^backend-staging$"; then
-        docker compose --env-file .env.staging -f docker-compose.staging.yml exec backend-staging python manage.py "$@"
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-staging_backend"; then
+        $DOCKER_BIN exec $tty_flag tierraviva-staging_backend python manage.py "$@"
+    elif $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml ps 2>/dev/null | grep -q "backend-staging"; then
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml exec $tty_flag backend-staging python manage.py "$@"
     else
-        docker compose --env-file .env.staging -f docker-compose.staging.yml run --rm backend-staging python manage.py "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml run --rm $tty_flag -w /app backend-staging python manage.py "$@"
     fi
 }
 
-# Helper function to run Django commands in prod (using exec if running, run --rm if not)
+# Helper function to run Django commands in prod
 run_django_cmd_prod() {
-    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^backend-prod$"; then
-        docker compose -f docker-compose.prod.yml exec backend-prod python manage.py "$@"
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-prod_backend"; then
+        $DOCKER_BIN exec $tty_flag tierraviva-prod_backend python manage.py "$@"
+    elif $COMPOSE_BIN -f docker-compose.prod.yml ps 2>/dev/null | grep -q "backend-prod"; then
+        $COMPOSE_BIN -f docker-compose.prod.yml exec $tty_flag backend-prod python manage.py "$@"
     else
-        docker compose -f docker-compose.prod.yml run --rm backend-prod python manage.py "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml run --rm $tty_flag -w /app backend-prod python manage.py "$@"
     fi
 }
 
-# Helper function to run frontend commands in dev (using exec if running, run --rm if not)
-run_frontend_cmd_dev() {
-    if docker compose ps --services --filter "status=running" | grep -q "^frontend$"; then
-        docker compose exec frontend npm run test -- "$@"
+# Helper function to run npm/frontend commands in dev
+run_npm_cmd_dev() {
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-dev_frontend"; then
+        $DOCKER_BIN exec $tty_flag tierraviva-dev_frontend npm "$@"
+    elif $COMPOSE_BIN ps 2>/dev/null | grep -q "frontend"; then
+        $COMPOSE_BIN exec $tty_flag frontend npm "$@"
+    elif [ -d "tierraViva-front" ] && command -v npm &> /dev/null; then
+        (cd tierraViva-front && npm "$@")
     else
-        docker compose run --rm frontend npm run test -- "$@"
+        $COMPOSE_BIN run --rm $tty_flag -w /app frontend npm "$@"
     fi
 }
 
-# Helper function to run frontend commands in staging (using exec if running, run --rm if not)
-run_frontend_cmd_staging() {
-    if docker compose --env-file .env.staging -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^frontend-staging$"; then
-        docker compose --env-file .env.staging -f docker-compose.staging.yml exec frontend-staging npm run test -- "$@"
+# Helper function to run npm/frontend commands in staging
+run_npm_cmd_staging() {
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-staging_frontend"; then
+        $DOCKER_BIN exec $tty_flag tierraviva-staging_frontend npm "$@"
+    elif $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml ps 2>/dev/null | grep -q "frontend-staging"; then
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml exec $tty_flag frontend-staging npm "$@"
     else
-        docker compose --env-file .env.staging -f docker-compose.staging.yml run --rm frontend-staging npm run test -- "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml run --rm $tty_flag -w /app frontend-staging npm "$@"
     fi
 }
 
-# Helper function to run frontend commands in prod (using exec if running, run --rm if not)
-run_frontend_cmd_prod() {
-    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^frontend-prod$"; then
-        docker compose -f docker-compose.prod.yml exec frontend-prod npm run test -- "$@"
+# Helper function to run npm/frontend commands in prod
+run_npm_cmd_prod() {
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-prod_frontend"; then
+        $DOCKER_BIN exec $tty_flag tierraviva-prod_frontend npm "$@"
+    elif $COMPOSE_BIN -f docker-compose.prod.yml ps 2>/dev/null | grep -q "frontend-prod"; then
+        $COMPOSE_BIN -f docker-compose.prod.yml exec $tty_flag frontend-prod npm "$@"
     else
-        docker compose -f docker-compose.prod.yml run --rm frontend-prod npm run test -- "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml run --rm $tty_flag -w /app frontend-prod npm "$@"
     fi
 }
 
-# Helper function to find and remove conflicting containers from other project namespaces
+# Helper function to find and remove conflicting containers
 remove_conflicting_containers() {
     local container_names=("$@")
     for container in "${container_names[@]}"; do
-        if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
-            echo "Warning: Container '${container}' already exists (possibly from a different or older Docker Compose project/run)."
+        if $DOCKER_BIN ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^${container}$"; then
+            echo "Warning: Container '${container}' already exists (possibly from a different or older Docker Compose run)."
             echo "Removing existing container '${container}' to prevent naming conflicts..."
-            docker rm -f "${container}"
+            $DOCKER_BIN rm -f "${container}"
         fi
     done
 }
 
 show_help() {
     echo "==========================================="
-    echo "       TIERRA VIVA - Nectar Labs CLI       "
+    echo "      TIERRA VIVA - Nectar Labs CLI        "
     echo "==========================================="
     echo ""
     echo "Usage: ./nectar.sh [command]"
     echo ""
-    echo "Commands:"
+    echo "=== DEVELOPMENT ENV (Local / Dev) ==="
     echo "  dev                     - Start development environment"
     echo "  stop                    - Stop development environment"
     echo "  restart                 - Restart development containers"
@@ -90,66 +176,75 @@ show_help() {
     echo "  createsuperuser         - Create a Django admin superuser in dev"
     echo "  shell                   - Open backend python shell in dev"
     echo "  test                    - Run backend tests (Dev)"
+    echo "  pycheck                 - Run Python syntax check (py_compile)"
     echo "  test-frontend           - Run frontend tests (Dev)"
     echo "  typecheck               - Run TypeScript type-check in Dev frontend"
     echo "  buildcheck              - Run Next.js build check in Dev frontend"
+    echo "  install-frontend        - Install npm packages in Dev frontend"
     echo "  frontend                - Run Next.js frontend locally (npm run dev)"
     echo ""
-    echo "Staging Commands:"
+    echo "=== STAGING ENV ==="
     echo "  build-staging           - Build staging Docker images"
     echo "  up-staging              - Start staging environment"
+    echo "  deploy-staging          - Build and start staging environment"
     echo "  down-staging            - Stop staging environment"
     echo "  restart-staging         - Restart staging environment"
     echo "  logs-staging            - Show real-time staging logs"
+    echo "  logs-nginx-staging      - Show real-time staging Nginx logs"
     echo "  makemigrations-staging  - Generate staging database migrations"
     echo "  migrate-staging         - Run database migrations in staging"
     echo "  createsuperuser-staging - Create admin superuser in staging"
     echo "  shell-staging           - Open backend python shell in staging"
     echo "  collectstatic-staging   - Compile static assets in staging"
     echo "  test-staging            - Run backend tests (Staging)"
-    echo "  test-frontend-staging   - Run frontend tests (Staging)"
+    echo "  pycheck-staging         - Run Python syntax check (Staging)"
+    echo "  test-frontend-staging   - Run frontend tests in Staging"
     echo "  typecheck-staging       - Run TypeScript type-check in Staging frontend"
     echo "  buildcheck-staging      - Run Next.js build check in Staging frontend"
+    echo "  install-frontend-staging - Install npm packages in Staging container"
     echo ""
-    echo "Production Commands:"
+    echo "=== PRODUCTION ENV (Prod) ==="
     echo "  build                   - Build production Docker images"
     echo "  up-prod                 - Start production environment"
+    echo "  deploy-prod             - Build and start production environment"
     echo "  down-prod               - Stop production environment"
     echo "  restart-prod            - Restart production environment"
     echo "  logs-prod               - Show real-time production logs"
+    echo "  logs-nginx-prod         - Show real-time production Nginx logs"
     echo "  makemigrations-prod     - Generate database migrations (Prod)"
     echo "  migrate-prod            - Run database migrations in prod"
-    echo "  collectstatic           - Compile static assets in prod"
     echo "  createsuperuser-prod    - Create admin superuser in prod"
     echo "  shell-prod              - Open backend python shell in prod"
-    echo "  test-prod               - Run backend tests (Prod)"
-    echo "  test-frontend-prod      - Run frontend tests (Prod)"
-    echo "  typecheck-prod          - Run TypeScript type-check in Prod frontend"
-    echo "  buildcheck-prod         - Run Next.js build check in Prod frontend"
+    echo "  collectstatic           - Compile static assets in prod"
+    echo "  pycheck-prod            - Run Python syntax check (Prod)"
+    echo "  test-frontend-prod      - Run frontend tests in Production"
+    echo "  install-frontend-prod   - Install npm packages in Production container"
     echo "  certbot                 - Request Let's Encrypt SSL certificate"
-    echo "  clean                   - Safe Docker and VPS cleanup"
+    echo ""
+    echo "=== UTILITIES ==="
+    echo "  clean [--all|-a]        - Comprehensive Docker and VPS cleanup (use --all for deep prune)"
     echo "  help                    - Show this help screen"
 }
 
 case $COMMAND in
     dev)
-        echo "Starting TIERRA VIVA Dev Environment..."
+        echo "Starting TIERRA VIVA Dev Environment using ${COMPOSE_BIN}..."
         remove_conflicting_containers tierraviva-dev_backend tierraviva-dev_frontend tierraviva-dev_nginx
-        docker compose up -d --build "$@"
+        $COMPOSE_BIN up -d --build "$@"
         ;;
     stop)
         echo "Stopping Dev Environment..."
-        docker compose down "$@"
+        $COMPOSE_BIN down "$@"
         ;;
     restart)
         echo "Restarting Dev Environment..."
-        docker compose restart "$@"
+        $COMPOSE_BIN restart "$@"
         ;;
     logs)
         if [ $# -eq 0 ]; then
-            docker compose logs -f --tail=100
+            $COMPOSE_BIN logs -f --tail=100
         else
-            docker compose logs "$@"
+            $COMPOSE_BIN logs "$@"
         fi
         ;;
     makemigrations|makemigrations-dev)
@@ -167,42 +262,95 @@ case $COMMAND in
     test|test-dev)
         run_django_cmd_dev test "$@"
         ;;
+    test-frontend|test-frontend-dev)
+        echo "Running frontend tests in Dev..."
+        run_npm_cmd_dev test -- "$@"
+        ;;
+    install-frontend|install-frontend-dev)
+        echo "Installing npm packages in Dev Frontend..."
+        run_npm_cmd_dev install "$@"
+        ;;
+    pycheck)
+        echo "Running Python syntax check (py_compile)..."
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-dev_backend"; then
+            $DOCKER_BIN exec tierraviva-dev_backend python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        elif $COMPOSE_BIN ps 2>/dev/null | grep -q "backend"; then
+            $COMPOSE_BIN exec backend python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        elif command -v python &> /dev/null; then
+            (cd tierraViva-backend && python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py)
+        else
+            $COMPOSE_BIN run --rm -w /app backend python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        fi
+        ;;
+    pycheck-staging)
+        echo "Running Python syntax check (py_compile) in Staging..."
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-staging_backend"; then
+            $DOCKER_BIN exec tierraviva-staging_backend python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        else
+            $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml run --rm -w /app backend-staging python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        fi
+        ;;
+    pycheck-prod)
+        echo "Running Python syntax check (py_compile) in Production..."
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-prod_backend"; then
+            $DOCKER_BIN exec tierraviva-prod_backend python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        else
+            $COMPOSE_BIN -f docker-compose.prod.yml run --rm -w /app backend-prod python -m py_compile config/settings.py sponsorship/views.py shop/views.py dashboard/views.py assistant/views.py
+        fi
+        ;;
     typecheck)
         echo "Running TypeScript type-check in Dev frontend..."
-        docker compose exec frontend npx tsc --noEmit "$@"
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "^tierraviva-dev_frontend$"; then
+            $DOCKER_BIN exec -e NODE_OPTIONS="--max-old-space-size=1024" tierraviva-dev_frontend npm run typecheck "$@"
+        else
+            $COMPOSE_BIN exec -e NODE_OPTIONS="--max-old-space-size=1024" frontend npm run typecheck "$@"
+        fi
         ;;
     buildcheck)
         echo "Running Next.js build-check in Dev frontend..."
-        docker compose exec frontend npm run build "$@"
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-dev_frontend"; then
+            $DOCKER_BIN exec tierraviva-dev_frontend npm run build "$@"
+        else
+            $COMPOSE_BIN exec frontend npm run build "$@"
+        fi
         ;;
     frontend)
-        cd frontend && npm run dev "$@"
-        ;;
-    test-frontend|test-frontend-dev|frontend-test)
-        run_frontend_cmd_dev "$@"
+        cd tierraViva-front && npm run dev "$@"
         ;;
     build-staging)
         echo "Building TIERRA VIVA Staging Images..."
-        docker compose --env-file .env.staging -f docker-compose.staging.yml build "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml build "$@"
         ;;
     up-staging)
         echo "Starting TIERRA VIVA Staging Environment..."
         remove_conflicting_containers tierraviva-staging_backend tierraviva-staging_frontend tierraviva-staging_nginx tierraviva-staging_autostop
-        docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml up -d --build "$@"
         ;;
     down-staging|stop-staging)
         echo "Stopping Staging Environment..."
-        docker compose --env-file .env.staging -f docker-compose.staging.yml down "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml down "$@"
+        ;;
+    deploy-staging)
+        echo "Deploying TIERRA VIVA Staging Environment..."
+        remove_conflicting_containers tierraviva-staging_backend tierraviva-staging_frontend tierraviva-staging_nginx tierraviva-staging_autostop
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml up -d --build "$@"
         ;;
     restart-staging)
         echo "Restarting Staging Environment..."
-        docker compose --env-file .env.staging -f docker-compose.staging.yml restart "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml restart "$@"
         ;;
     logs-staging)
         if [ $# -eq 0 ]; then
-            docker compose --env-file .env.staging -f docker-compose.staging.yml logs -f --tail=100
+            $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml logs -f --tail=100
         else
-            docker compose --env-file .env.staging -f docker-compose.staging.yml logs "$@"
+            $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml logs "$@"
+        fi
+        ;;
+    logs-nginx-staging)
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "^tierraviva-staging_nginx$"; then
+            $DOCKER_BIN logs -f --tail=100 tierraviva-staging_nginx "$@"
+        else
+            $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml logs -f --tail=100 nginx-staging "$@"
         fi
         ;;
     migrate-staging)
@@ -224,39 +372,68 @@ case $COMMAND in
     test-staging)
         run_django_cmd_staging test "$@"
         ;;
+    test-frontend-staging)
+        echo "Running frontend tests in Staging Frontend..."
+        run_npm_cmd_staging test -- "$@"
+        ;;
+    install-frontend-staging)
+        echo "Installing npm packages in Staging Frontend..."
+        run_npm_cmd_staging install "$@"
+        ;;
     typecheck-staging)
         echo "Running TypeScript type-check for Staging frontend..."
-        docker compose --env-file .env.staging -f docker-compose.staging.yml run --rm frontend-staging npx tsc --noEmit "$@"
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "^tierraviva-staging_frontend$"; then
+            $DOCKER_BIN exec -e NODE_OPTIONS="--max-old-space-size=1024" tierraviva-staging_frontend npm run typecheck "$@"
+        else
+            $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml run --rm -e NODE_OPTIONS="--max-old-space-size=1024" frontend-staging npm run typecheck "$@"
+        fi
         ;;
     buildcheck-staging)
         echo "Running Next.js build-check for Staging frontend..."
-        docker compose --env-file .env.staging -f docker-compose.staging.yml run --rm frontend-staging npm run build "$@"
+        $COMPOSE_BIN --env-file .env.staging -f docker-compose.staging.yml run --rm frontend-staging npm run build "$@"
         ;;
-    test-frontend-staging|frontend-test-staging)
-        run_frontend_cmd_staging "$@"
+    test-frontend-prod)
+        echo "Running frontend tests in Production Frontend..."
+        run_npm_cmd_prod test -- "$@"
+        ;;
+    install-frontend-prod)
+        echo "Installing npm packages in Production Frontend..."
+        run_npm_cmd_prod install "$@"
         ;;
     build)
         echo "Building TIERRA VIVA Production Images..."
-        docker compose -f docker-compose.prod.yml build "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml build "$@"
         ;;
     up-prod)
         echo "Starting TIERRA VIVA Production Environment..."
         remove_conflicting_containers tierraviva-prod_backend tierraviva-prod_frontend
-        docker compose -f docker-compose.prod.yml up -d "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml up -d "$@"
+        ;;
+    deploy-prod)
+        echo "Deploying TIERRA VIVA Production Environment..."
+        remove_conflicting_containers tierraviva-prod_backend tierraviva-prod_frontend
+        $COMPOSE_BIN -f docker-compose.prod.yml up -d --build "$@"
         ;;
     down-prod)
         echo "Stopping Production Environment..."
-        docker compose -f docker-compose.prod.yml down "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml down "$@"
         ;;
     restart-prod)
         echo "Restarting Production Environment..."
-        docker compose -f docker-compose.prod.yml restart "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml restart "$@"
         ;;
     logs-prod)
         if [ $# -eq 0 ]; then
-            docker compose -f docker-compose.prod.yml logs -f --tail=100
+            $COMPOSE_BIN -f docker-compose.prod.yml logs -f --tail=100
         else
-            docker compose -f docker-compose.prod.yml logs "$@"
+            $COMPOSE_BIN -f docker-compose.prod.yml logs "$@"
+        fi
+        ;;
+    logs-nginx-prod)
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "^prod_nginx_tierraviva$"; then
+            $DOCKER_BIN logs -f --tail=100 prod_nginx_tierraviva "$@"
+        else
+            echo "No se encontró el contenedor Nginx de producción (prod_nginx_tierraviva)."
         fi
         ;;
     makemigrations-prod)
@@ -271,25 +448,11 @@ case $COMMAND in
     shell-prod)
         run_django_cmd_prod shell "$@"
         ;;
-    test-prod)
-        run_django_cmd_prod test "$@"
-        ;;
-    typecheck-prod)
-        echo "Running TypeScript type-check for Prod frontend..."
-        docker compose -f docker-compose.prod.yml run --rm frontend-prod npx tsc --noEmit "$@"
-        ;;
-    buildcheck-prod)
-        echo "Running Next.js build-check for Prod frontend tests..."
-        docker compose -f docker-compose.prod.yml run --rm frontend-prod npm run build "$@"
-        ;;
-    test-frontend-prod|frontend-test-prod)
-        run_frontend_cmd_prod "$@"
-        ;;
     collectstatic)
         echo "Running collectstatic..."
-        if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
+        if $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-dev_backend"; then
             run_django_cmd_dev collectstatic --no-input "$@"
-        elif docker compose --env-file .env.staging -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^backend-staging$"; then
+        elif $DOCKER_BIN ps --format '{{.Names}}' 2>/dev/null | grep -q "tierraviva-staging_backend"; then
             run_django_cmd_staging collectstatic --no-input "$@"
         else
             run_django_cmd_prod collectstatic --no-input "$@"
@@ -301,37 +464,44 @@ case $COMMAND in
             echo "Usage: ./nectar.sh certbot example.com"
             exit 1
         fi
-        docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
+        $COMPOSE_BIN -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
         ;;
     clean)
-        echo "Starting comprehensive and safe VPS/Docker cleanup..."
+        echo "Starting comprehensive VPS & Docker system cleanup for Tierra Viva..."
         echo ""
-        echo "1. Removing stopped containers..."
-        docker container prune -f
-        
-        echo "2. Removing dangling networks..."
-        docker network prune -f
-        
-        echo "3. Removing dangling volumes (only unused/anonymous volumes)..."
-        docker volume prune -f
-        
-        echo "4. Removing dangling/untagged images..."
-        docker image prune -f
-        
-        echo "5. Removing Docker build cache..."
-        docker builder prune -f
-        
+        DEEP_PRUNING=false
+        if [ "$1" = "--all" ] || [ "$1" = "-a" ]; then
+            DEEP_PRUNING=true
+        fi
 
+        echo "1. Cleaning Docker containers, networks, volumes, images and build cache..."
+        if [ "$DEEP_PRUNING" = true ]; then
+            echo "   Executing deep system prune (docker system prune -a --volumes -f)..."
+            $DOCKER_BIN system prune -a --volumes -f
+        else
+            echo "   Executing standard system prune (docker system prune -f)..."
+            $DOCKER_BIN system prune -f
+            $DOCKER_BIN volume prune -f
+            $DOCKER_BIN builder prune -f 2>/dev/null || true
+        fi
+        
         if command -v journalctl &> /dev/null; then
-            echo "6. Vacuuming system logs (journald) to 100MB..."
-            sudo journalctl --vacuum-size=100M 2>/dev/null || echo "   (Skip: sudo privileges required to vacuum logs)"
+            echo "2. Vacuuming system logs (journald) to 50MB..."
+            sudo journalctl --vacuum-size=50M 2>/dev/null || echo "   (Skip: sudo privileges required to vacuum logs)"
         fi
-        
+
+        echo "3. Truncating large authentication log files (/var/log/btmp)..."
+        sudo truncate -s 0 /var/log/btmp /var/log/btmp.1 2>/dev/null || echo "   (Skip: sudo privileges required to truncate /var/log/btmp)"
+
         if command -v apt-get &> /dev/null; then
-            echo "7. Cleaning APT package cache..."
-            sudo apt-get autoclean -y 2>/dev/null || echo "   (Skip: sudo privileges required to clean APT cache)"
+            echo "4. Cleaning APT package cache and removing unused packages..."
+            sudo apt-get clean -y 2>/dev/null || echo "   (Skip: sudo privileges required for apt-get clean)"
+            sudo apt-get autoremove -y 2>/dev/null || echo "   (Skip: sudo privileges required for apt-get autoremove)"
         fi
-        
+
+        echo ""
+        echo "Docker system status after cleanup:"
+        $DOCKER_BIN system df 2>/dev/null || true
         echo ""
         echo "System cleanup complete! Disk space reclaimed successfully."
         ;;
