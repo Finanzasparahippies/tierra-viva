@@ -1,4 +1,6 @@
-import React from "react";
+'use client';
+
+import React, { useEffect, useState } from "react";
 
 // 1. Flor original
 const FlowerIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
@@ -40,17 +42,11 @@ const CactusIcon = ({ className, style }: { className?: string, style?: React.CS
 // 6. Abejita
 const BeeIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style}>
-    {/* Ala Izquierda */}
     <ellipse cx="9" cy="8" rx="3" ry="5" transform="rotate(-30 9 8)" opacity="0.6" />
-    {/* Ala Derecha */}
     <ellipse cx="14" cy="8" rx="3" ry="5" transform="rotate(30 14 8)" opacity="0.6" />
-    {/* Cuerpo (Abeja gorda) */}
     <ellipse cx="12" cy="13" rx="6" ry="4" fill="currentColor" />
-    {/* Rayas */}
     <path d="M9.5 9.5v7M12.5 9.5v7" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-    {/* Aguijón */}
     <polygon points="18,13 21,13 18,14.5" />
-    {/* Cabeza (Ojo) */}
     <circle cx="8" cy="13" r="1" fill="white" />
   </svg>
 );
@@ -58,47 +54,59 @@ const BeeIcon = ({ className, style }: { className?: string, style?: React.CSSPr
 // 7. Vaca (Abstracta / Minimalista)
 const CowIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style}>
-    {/* Osico / Cara Inferior */}
     <path d="M6 14h12v3c0 2-3 4-6 4s-6-2-6-4v-3z" fillOpacity="0.75" />
-    {/* Orificios Nariz */}
     <circle cx="9" cy="17" r="1.5" fill="white" />
     <circle cx="15" cy="17" r="1.5" fill="white" />
-    {/* Forma de cabeza */}
     <path d="M7 8h10v6H7z" />
-    {/* Ojos */}
     <circle cx="9.5" cy="11" r="1" fill="white" />
     <circle cx="14.5" cy="11" r="1" fill="white" />
-    {/* Orejas */}
     <path d="M7 8c-2-1-4-1-4 2s3 2 4-2 M17 8c2-1 4-1 4 2s-3 2-4-2" />
-    {/* Cuernos */}
     <path d="M7 8c0-2 1-3 2-4M17 8c0-2-1-3-2-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
   </svg>
 );
 
+function FloatingNatureComponent() {
+  const [isPaused, setIsPaused] = useState(false);
 
-export default function FloatingNature() {
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsPaused(document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  const containerStyle: React.CSSProperties = {
+    animationPlayState: isPaused ? 'paused' : 'running',
+  };
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden select-none">
       {/* Grupo 1: Flores y Plantas */}
-      <FlowerIcon className="absolute left-[5%] opacity-0 w-24 h-24 text-primary animate-float" style={{ animationDelay: '0s' }} />
-      <LeafIcon className="absolute left-[15%] opacity-0 w-16 h-16 text-secondary animate-float-slow" style={{ animationDelay: '7s' }} />
-      <CactusIcon className="absolute left-[30%] opacity-0 w-32 h-32 text-destructive animate-float-reverse" style={{ animationDelay: '2s' }} />
-      <LeafIcon className="absolute left-[65%] opacity-0 w-14 h-14 text-primary animate-float" style={{ animationDelay: '12s' }} />
-      <CactusIcon className="absolute left-[75%] opacity-0 w-20 h-20 text-accent animate-float-fast" style={{ animationDelay: '5s' }} />
+      <FlowerIcon className="absolute left-[5%] opacity-0 w-24 h-24 text-primary animate-float pointer-events-none" style={{ ...containerStyle, animationDelay: '0s' }} />
+      <LeafIcon className="absolute left-[15%] opacity-0 w-16 h-16 text-secondary animate-float-slow pointer-events-none" style={{ ...containerStyle, animationDelay: '7s' }} />
+      <CactusIcon className="absolute left-[30%] opacity-0 w-32 h-32 text-destructive animate-float-reverse pointer-events-none" style={{ ...containerStyle, animationDelay: '2s' }} />
+      <LeafIcon className="absolute left-[65%] opacity-0 w-14 h-14 text-primary animate-float pointer-events-none" style={{ ...containerStyle, animationDelay: '12s' }} />
+      <CactusIcon className="absolute left-[75%] opacity-0 w-20 h-20 text-accent animate-float-fast pointer-events-none" style={{ ...containerStyle, animationDelay: '5s' }} />
       
       {/* Grupo 2: Animales y Rancho */}
-      <BeeIcon className="absolute left-[20%] opacity-0 w-14 h-14 text-accent animate-float-fast" style={{ animationDelay: '3s' }} />
-      <CowIcon className="absolute left-[40%] opacity-0 w-28 h-28 text-muted-foreground/30 animate-float-slow" style={{ animationDelay: '15s' }} />
-      <BeeIcon className="absolute left-[60%] opacity-0 w-12 h-12 text-destructive animate-float" style={{ animationDelay: '8s' }} />
-      <CowIcon className="absolute left-[85%] opacity-0 w-24 h-24 text-primary/40 animate-float-reverse" style={{ animationDelay: '10s' }} />
+      <BeeIcon className="absolute left-[20%] opacity-0 w-14 h-14 text-accent animate-float-fast pointer-events-none" style={{ ...containerStyle, animationDelay: '3s' }} />
+      <CowIcon className="absolute left-[40%] opacity-0 w-28 h-28 text-muted-foreground/30 animate-float-slow pointer-events-none" style={{ ...containerStyle, animationDelay: '15s' }} />
+      <BeeIcon className="absolute left-[60%] opacity-0 w-12 h-12 text-destructive animate-float pointer-events-none" style={{ ...containerStyle, animationDelay: '8s' }} />
+      <CowIcon className="absolute left-[85%] opacity-0 w-24 h-24 text-primary/40 animate-float-reverse pointer-events-none" style={{ ...containerStyle, animationDelay: '10s' }} />
 
       {/* Grupo 3: Elementos adicionales (Gotas, Hexagonos) */}
-      <DropIcon className="absolute left-[10%] opacity-0 w-10 h-10 text-secondary animate-float-reverse" style={{ animationDelay: '18s' }} />
-      <HexagonIcon className="absolute left-[25%] opacity-0 w-16 h-16 text-primary/20 animate-float" style={{ animationDelay: '4s' }} />
-      <DropIcon className="absolute left-[45%] opacity-0 w-8 h-8 text-primary animate-float-fast" style={{ animationDelay: '22s' }} />
-      <HexagonIcon className="absolute left-[55%] opacity-0 w-32 h-32 text-secondary/30 animate-float-slow" style={{ animationDelay: '14s' }} />
-      <DropIcon className="absolute left-[80%] opacity-0 w-12 h-12 text-destructive animate-float" style={{ animationDelay: '6s' }} />
-      <DropIcon className="absolute left-[90%] opacity-0 w-16 h-16 text-accent animate-float-reverse" style={{ animationDelay: '20s' }} />
+      <DropIcon className="absolute left-[10%] opacity-0 w-10 h-10 text-secondary animate-float-reverse pointer-events-none" style={{ ...containerStyle, animationDelay: '18s' }} />
+      <HexagonIcon className="absolute left-[25%] opacity-0 w-16 h-16 text-primary/20 animate-float pointer-events-none" style={{ ...containerStyle, animationDelay: '4s' }} />
+      <DropIcon className="absolute left-[45%] opacity-0 w-8 h-8 text-primary animate-float-fast pointer-events-none" style={{ ...containerStyle, animationDelay: '22s' }} />
+      <HexagonIcon className="absolute left-[55%] opacity-0 w-32 h-32 text-secondary/30 animate-float-slow pointer-events-none" style={{ ...containerStyle, animationDelay: '14s' }} />
+      <DropIcon className="absolute left-[80%] opacity-0 w-12 h-12 text-destructive animate-float pointer-events-none" style={{ ...containerStyle, animationDelay: '6s' }} />
+      <DropIcon className="absolute left-[90%] opacity-0 w-16 h-16 text-accent animate-float-reverse pointer-events-none" style={{ ...containerStyle, animationDelay: '20s' }} />
     </div>
   );
 }
+
+export default React.memo(FloatingNatureComponent);

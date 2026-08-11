@@ -76,28 +76,36 @@
 }
 
 @keyframes float {
-  0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
+  0% { transform: translate3d(0, 100vh, 0) rotate(0deg) scale(0.8); opacity: 0; }
   10%, 90% { opacity: 0.25; }
-  100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+  100% { transform: translate3d(0, -20vh, 0) rotate(360deg) scale(1.2); opacity: 0; }
 }
 
 @keyframes float-reverse {
-  0% { transform: translateY(100vh) rotate(360deg) scale(1.2); opacity: 0; }
+  0% { transform: translate3d(0, 100vh, 0) rotate(360deg) scale(1.2); opacity: 0; }
   10%, 90% { opacity: 0.25; }
-  100% { transform: translateY(-20vh) rotate(0deg) scale(0.8); opacity: 0; }
+  100% { transform: translate3d(0, -20vh, 0) rotate(0deg) scale(0.8); opacity: 0; }
 }
 
 .animate-float {
   animation: float 28s linear infinite;
+  will-change: transform, opacity;
+  contain: layout style paint;
 }
 .animate-float-slow {
   animation: float 45s linear infinite;
+  will-change: transform, opacity;
+  contain: layout style paint;
 }
 .animate-float-fast {
   animation: float 18s linear infinite;
+  will-change: transform, opacity;
+  contain: layout style paint;
 }
 .animate-float-reverse {
   animation: float-reverse 35s linear infinite;
+  will-change: transform, opacity;
+  contain: layout style paint;
 }
 
 @keyframes draw {

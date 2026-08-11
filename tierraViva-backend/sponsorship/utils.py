@@ -87,12 +87,15 @@ def create_stripe_product_and_price(tier):
 
     # Get monthly price
     monthly_price_id = None
+    monthly_amount_cents = int((tier.price or 0) * 100)
+    prices_list = []
+
     try:
-        prices = stripe.Price.list(product=product.id, active=True)
-        amount_cents = int(tier.price * 100)
-        for p in prices.data:
+        prices_res = stripe.Price.list(product=product.id, active=True)
+        prices_list = prices_res.data if prices_res and hasattr(prices_res, 'data') else []
+        for p in prices_list:
             is_monthly = p.recurring and p.recurring.get("interval") == "month" if tier.type == "SUBSCRIPTION" else not p.recurring
-            if is_monthly and p.unit_amount == amount_cents and p.currency == "mxn":
+            if is_monthly and p.unit_amount == monthly_amount_cents and p.currency == "mxn":
                 monthly_price_id = p.id
                 break
     except Exception as e:
@@ -101,7 +104,7 @@ def create_stripe_product_and_price(tier):
 
     if not monthly_price_id:
         monthly_price = stripe.Price.create(
-            unit_amount=int(tier.price * 100),
+            unit_amount=monthly_amount_cents,
             currency="mxn",
             product=product.id,
             recurring={"interval": "month"} if tier.type == "SUBSCRIPTION" else None,
@@ -112,9 +115,11 @@ def create_stripe_product_and_price(tier):
 
     if tier.type == "SUBSCRIPTION":
         annual_price_id = None
+        annual_val = tier.price_annual if tier.price_annual is not None else ((tier.price or 0) * 10)
+        amount_cents_annual = int(annual_val * 100)
+
         try:
-            amount_cents_annual = int(tier.price_annual * 100)
-            for p in prices.data:
+            for p in prices_list:
                 is_annual = p.recurring and p.recurring.get("interval") == "year"
                 if is_annual and p.unit_amount == amount_cents_annual and p.currency == "mxn":
                     annual_price_id = p.id
@@ -125,7 +130,7 @@ def create_stripe_product_and_price(tier):
 
         if not annual_price_id:
             annual_price = stripe.Price.create(
-                unit_amount=int(tier.price_annual * 100),
+                unit_amount=amount_cents_annual,
                 currency="mxn",
                 product=product.id,
                 recurring={"interval": "year"},
