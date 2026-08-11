@@ -20,7 +20,7 @@ export function RichTextEditor({
     value, 
     onChange, 
     placeholder = "Escribe tu contenido aquí...",
-    minHeight = "220px"
+    minHeight = "240px"
 }: RichTextEditorProps) {
     const editorRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,17 +36,63 @@ export function RichTextEditor({
     // Sync initial value or external updates if HTML differs
     useEffect(() => {
         if (editorRef.current && value !== editorRef.current.innerHTML) {
-            // Prevent replacing if the user is typing active content
             if (document.activeElement !== editorRef.current) {
                 editorRef.current.innerHTML = value || "";
             }
         }
     }, [value]);
 
+    // Save and Restore Range to prevent cursor jumping
+    const saveSelection = (): Range | null => {
+        if (typeof window === "undefined") return null;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            return sel.getRangeAt(0);
+        }
+        return null;
+    };
+
+    const restoreSelection = (range: Range | null) => {
+        if (!range || typeof window === "undefined" || !editorRef.current) return;
+        const sel = window.getSelection();
+        if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    };
+
     const execCommand = (command: string, value: string | undefined = undefined) => {
         if (!editorRef.current) return;
+        const savedRange = saveSelection();
         editorRef.current.focus();
+        if (savedRange) restoreSelection(savedRange);
+        
         document.execCommand(command, false, value);
+        handleInput();
+    };
+
+    const execBlockToggle = (tag: string) => {
+        if (!editorRef.current) return;
+        const savedRange = saveSelection();
+        editorRef.current.focus();
+        if (savedRange) restoreSelection(savedRange);
+
+        // Check if currently inside target block
+        const sel = window.getSelection();
+        let isAlreadyBlock = false;
+        if (sel && sel.anchorNode) {
+            let parent: Node | null = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentNode : sel.anchorNode;
+            while (parent && parent !== editorRef.current) {
+                if (parent.nodeName.toLowerCase() === tag.toLowerCase()) {
+                    isAlreadyBlock = true;
+                    break;
+                }
+                parent = parent.parentNode;
+            }
+        }
+
+        const targetTag = isAlreadyBlock ? "<p>" : `<${tag}>`;
+        document.execCommand("formatBlock", false, targetTag);
         handleInput();
     };
 
@@ -95,6 +141,65 @@ export function RichTextEditor({
 
     return (
         <div className="border border-border rounded-2xl bg-card overflow-hidden shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/40">
+            {/* Scoped CSS for Rich Text Formatting inside the editor */}
+            <style dangerouslySetInnerHTML={{__html: `
+                .editor-content h1 {
+                    font-size: 1.6rem !important;
+                    font-weight: 800 !important;
+                    color: #1b4332 !important;
+                    margin: 0.75rem 0 !important;
+                    display: block !important;
+                }
+                .dark .editor-content h1 {
+                    color: #40916c !important;
+                }
+                .editor-content h2 {
+                    font-size: 1.35rem !important;
+                    font-weight: 750 !important;
+                    color: #2d6a4f !important;
+                    margin: 0.5rem 0 !important;
+                    display: block !important;
+                }
+                .dark .editor-content h2 {
+                    color: #52b788 !important;
+                }
+                .editor-content h3 {
+                    font-size: 1.15rem !important;
+                    font-weight: 700 !important;
+                    margin: 0.5rem 0 !important;
+                    display: block !important;
+                }
+                .editor-content blockquote {
+                    border-left: 4px solid #f59e0b !important;
+                    background-color: rgba(245, 158, 11, 0.08) !important;
+                    padding: 0.5rem 1rem !important;
+                    border-radius: 0 0.5rem 0.5rem 0 !important;
+                    font-style: italic !important;
+                    margin: 0.75rem 0 !important;
+                    display: block !important;
+                }
+                .editor-content ul {
+                    list-style-type: disc !important;
+                    padding-left: 1.5rem !important;
+                    margin: 0.5rem 0 !important;
+                    display: block !important;
+                }
+                .editor-content ol {
+                    list-style-type: decimal !important;
+                    padding-left: 1.5rem !important;
+                    margin: 0.5rem 0 !important;
+                    display: block !important;
+                }
+                .editor-content li {
+                    display: list-item !important;
+                }
+                .editor-content img {
+                    border-radius: 1rem !important;
+                    max-width: 100% !important;
+                    margin: 0.5rem 0 !important;
+                }
+            `}} />
+
             {/* Toolbar Executiva */}
             <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/40 border-b border-border text-foreground select-none">
                 {/* Text Formats */}
@@ -137,25 +242,25 @@ export function RichTextEditor({
                 <div className="flex items-center gap-0.5 border-r border-border pr-1.5 mr-1">
                     <button
                         type="button"
-                        onClick={() => execCommand("formatBlock", "<h1>")}
+                        onClick={() => execBlockToggle("h1")}
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary font-bold text-xs transition-colors"
-                        title="Título 1"
+                        title="Título 1 (H1)"
                     >
                         <Heading1 className="w-4 h-4" />
                     </button>
                     <button
                         type="button"
-                        onClick={() => execCommand("formatBlock", "<h2>")}
+                        onClick={() => execBlockToggle("h2")}
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary font-bold text-xs transition-colors"
-                        title="Título 2"
+                        title="Título 2 (H2)"
                     >
                         <Heading2 className="w-4 h-4" />
                     </button>
                     <button
                         type="button"
-                        onClick={() => execCommand("formatBlock", "<h3>")}
+                        onClick={() => execBlockToggle("h3")}
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary font-bold text-xs transition-colors"
-                        title="Título 3"
+                        title="Título 3 (H3)"
                     >
                         <Heading3 className="w-4 h-4" />
                     </button>
@@ -181,7 +286,7 @@ export function RichTextEditor({
                     </button>
                     <button
                         type="button"
-                        onClick={() => execCommand("formatBlock", "<blockquote>")}
+                        onClick={() => execBlockToggle("blockquote")}
                         className="p-1.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
                         title="Cita Destacada"
                     >
@@ -252,7 +357,7 @@ export function RichTextEditor({
                 ref={editorRef}
                 contentEditable
                 onInput={handleInput}
-                className="p-4 text-foreground outline-none overflow-y-auto prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                className="editor-content p-4 text-foreground outline-none overflow-y-auto max-w-none text-sm leading-relaxed"
                 style={{ minHeight }}
                 data-placeholder={placeholder}
             />
@@ -304,4 +409,5 @@ export function RichTextEditor({
         </div>
     );
 }
+
 export default RichTextEditor;
