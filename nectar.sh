@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Nectar Labs CLI for TIERRA VIVA
-# Script to manage TIERRA VIVA docker/podman environment easily
-
 COMMAND=$1
 if [ $# -gt 0 ]; then
     shift

@@ -89,6 +89,8 @@ def stripe_webhook(request):
     if event_id:
         if StripeEvent.objects.filter(event_id=event_id).exists():
             return HttpResponse("Event already processed", status=200)
+        try:
+            StripeEvent.objects.create(event_id=event_id)
         except Exception as exc:
             import logging
             logging.getLogger("apps").warning(f"[Webhook] Event {event_id} duplicate or conflict: {exc}")
