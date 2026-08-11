@@ -99,7 +99,7 @@ class Product(models.Model):
                 updated = True
             except Exception as e:
                 import logging
-                logging.getLogger("apps").error(f"Error creating Stripe Product/Prices for Product {self.name}: {e}")
+                logging.getLogger("apps").error(f"Error creating Stripe Product/Prices for Product {self.name}: {e}", exc_info=True)
 
         if updated:
             super().save(update_fields=['stripe_product_id', 'stripe_price_id'])

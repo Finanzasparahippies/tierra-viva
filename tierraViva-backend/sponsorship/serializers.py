@@ -68,10 +68,10 @@ class RanchUpdateSerializer(serializers.ModelSerializer):
     def get_author_role(self, obj):
         if not obj.author:
             return "Staff"
-        try:
-            return obj.author.family_profile.title or obj.author.get_role_display()
-        except:
-            return obj.author.get_role_display()
+        family_profile = getattr(obj.author, 'family_profile', None)
+        if family_profile and hasattr(family_profile, 'title') and family_profile.title:
+            return family_profile.title
+        return obj.author.get_role_display()
 
     def get_image_url(self, obj):
         if obj.image:

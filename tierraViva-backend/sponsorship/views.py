@@ -59,18 +59,29 @@ class CreateCheckoutSessionView(APIView):
 
 @csrf_exempt
 def stripe_webhook(request):
+    import logging
+    logger = logging.getLogger("apps")
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+    endpoint_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', None)
+
+    if not sig_header or not endpoint_secret:
+        logger.error("[Webhook] Stripe signature header missing or STRIPE_WEBHOOK_SECRET unconfigured.")
+        return HttpResponse("Signature or webhook secret missing", status=400)
 
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, endpoint_secret
         )
-    except ValueError:
-        return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError:
-        return HttpResponse(status=400)
+    except ValueError as e:
+        logger.error(f"[Webhook] Invalid payload: {e}")
+        return HttpResponse("Invalid payload", status=400)
+    except stripe.error.SignatureVerificationError as e:
+        logger.error(f"[Webhook] Signature verification failed: {e}")
+        return HttpResponse("Signature verification failed", status=400)
+    except Exception as e:
+        logger.error(f"[Webhook] Unexpected error constructing event: {e}", exc_info=True)
+        return HttpResponse("Event error", status=400)
 
     # Idempotency check: prevent duplicate Stripe event processing
     from .models import StripeEvent
@@ -78,9 +89,9 @@ def stripe_webhook(request):
     if event_id:
         if StripeEvent.objects.filter(event_id=event_id).exists():
             return HttpResponse("Event already processed", status=200)
-        try:
-            StripeEvent.objects.create(event_id=event_id)
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.getLogger("apps").warning(f"[Webhook] Event {event_id} duplicate or conflict: {exc}")
             return HttpResponse("Event processing in progress", status=200)
 
     # Handle the event types
@@ -231,26 +242,29 @@ def handle_successful_payment(session):
             sub_id = session.get('subscription')
             pi_id = session.get('payment_intent') or session.get('id')
             
-            # Prevent duplicate sponsorships
-            if sub_id and Sponsorship.objects.filter(stripe_subscription_id=sub_id).exists():
-                logger.info(f"Sponsorship with subscription {sub_id} already exists")
-                return
-            if pi_id and Sponsorship.objects.filter(stripe_payment_intent=pi_id).exists():
-                logger.info(f"Sponsorship with payment intent {pi_id} already exists")
-                return
-            
-            Sponsorship.objects.create(
-                user=user,
-                animal=animal,
-                tier=tier,
-                billing_cycle=billing_cycle,
-                amount=tier.price_annual if billing_cycle == 'ANNUAL' else tier.price,
-                stripe_subscription_id=sub_id,
-                stripe_payment_intent=pi_id,
-                active=True
-            )
+            from django.db import transaction
+            with transaction.atomic():
+                # Prevent duplicate sponsorships within transaction lock
+                if sub_id and Sponsorship.objects.filter(stripe_subscription_id=sub_id).exists():
+                    logger.info(f"Sponsorship with subscription {sub_id} already exists")
+                    return
+                if pi_id and Sponsorship.objects.filter(stripe_payment_intent=pi_id).exists():
+                    logger.info(f"Sponsorship with payment intent {pi_id} already exists")
+                    return
+                
+                Sponsorship.objects.create(
+                    user=user,
+                    animal=animal,
+                    tier=tier,
+                    billing_cycle=billing_cycle,
+                    amount=tier.price_annual if billing_cycle == 'ANNUAL' else tier.price,
+                    stripe_subscription_id=sub_id,
+                    stripe_payment_intent=pi_id,
+                    active=True
+                )
+                logger.info(f"[Webhook] Created Sponsorship for user={user.id}, tier={tier.id}")
     except Exception as e:
-        logger.error(f"Error handling webhook payment: {e}")
+        logger.error(f"Error handling webhook payment for user_id={user_id}: {e}", exc_info=True)
 
 
 class RanchUpdateViewSet(viewsets.ModelViewSet):

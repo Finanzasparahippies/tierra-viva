@@ -144,7 +144,9 @@ class SystemMetricsView(APIView):
                 row = cursor.fetchone()
                 if row:
                     db_status = "Conectado"
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.getLogger("apps").error(f"Error checking database status in SystemMetricsView: {exc}", exc_info=True)
             db_status = "Error"
 
         # Check if psutil is available

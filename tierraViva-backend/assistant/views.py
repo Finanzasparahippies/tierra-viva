@@ -27,6 +27,7 @@ def _build_tierra_viva_context() -> str:
         else:
             context.append("No hay animales cargados actualmente.")
     except Exception as e:
+        logger.warning(f"Error cargando animales para asistente: {e}", exc_info=True)
         context.append(f"Error cargando animales: {e}")
         
     # 2. Sponsorship Tiers
@@ -39,6 +40,7 @@ def _build_tierra_viva_context() -> str:
         else:
             context.append("No hay niveles de apadrinamiento configurados.")
     except Exception as e:
+        logger.warning(f"Error cargando membresias para asistente: {e}", exc_info=True)
         context.append(f"Error cargando membresías: {e}")
         
     # 3. Activities / Camps / Workshops
@@ -51,6 +53,7 @@ def _build_tierra_viva_context() -> str:
         else:
             context.append("No hay actividades futuras programadas por el momento.")
     except Exception as e:
+        logger.warning(f"Error cargando actividades para asistente: {e}", exc_info=True)
         context.append(f"Error cargando actividades: {e}")
         
     # 4. Shop Products
@@ -63,6 +66,7 @@ def _build_tierra_viva_context() -> str:
         else:
             context.append("No hay productos cargados en la tienda.")
     except Exception as e:
+        logger.warning(f"Error cargando productos para asistente: {e}", exc_info=True)
         context.append(f"Error cargando productos: {e}")
         
     return "\n".join(context)

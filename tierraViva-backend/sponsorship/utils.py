@@ -32,7 +32,7 @@ def get_or_create_stripe_customer(user):
         return customer.id
     except Exception as e:
         import logging
-        logging.getLogger("apps").error(f"Error creating Stripe Customer for {user.email}: {e}")
+        logging.getLogger("apps").error(f"Error creating Stripe Customer for {user.email}: {e}", exc_info=True)
         return "mock_cus_fallback"
 
 def create_stripe_product_and_price(tier):
@@ -62,7 +62,7 @@ def create_stripe_product_and_price(tier):
                 break
     except Exception as e:
         import logging
-        logging.getLogger("apps").error(f"Error listing Stripe products: {e}")
+        logging.getLogger("apps").error(f"Error listing Stripe products: {e}", exc_info=True)
 
     images = []
     if hasattr(tier, 'image') and tier.image:
@@ -97,7 +97,7 @@ def create_stripe_product_and_price(tier):
                 break
     except Exception as e:
         import logging
-        logging.getLogger("apps").error(f"Error checking monthly price: {e}")
+        logging.getLogger("apps").error(f"Error checking monthly price: {e}", exc_info=True)
 
     if not monthly_price_id:
         monthly_price = stripe.Price.create(
@@ -121,7 +121,7 @@ def create_stripe_product_and_price(tier):
                     break
         except Exception as e:
             import logging
-            logging.getLogger("apps").error(f"Error checking annual price: {e}")
+            logging.getLogger("apps").error(f"Error checking annual price: {e}", exc_info=True)
 
         if not annual_price_id:
             annual_price = stripe.Price.create(
