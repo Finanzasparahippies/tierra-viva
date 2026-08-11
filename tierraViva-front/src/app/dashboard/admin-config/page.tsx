@@ -20,6 +20,7 @@ import {
     Settings, Heart, Trash, Edit, Plus, CheckCircle, AlertCircle, 
     Layers, ShoppingBag, ShieldAlert, Sparkles, BookOpen, Star, FileText
 } from "lucide-react";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 
 export default function AdminConfigPage() {
     const { user } = useAuthStore();
@@ -393,26 +394,28 @@ export default function AdminConfigPage() {
                             )}
                         </div>
 
-                        {/* Description / Content Text area */}
+                        {/* Description / Rich Content Editor */}
                         {activeTab !== "species" && (
                             <div className="space-y-1">
                                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                    {activeTab === "updates" || activeTab === "blog" ? "Contenido / Artículo" : "Descripción"}
+                                    {activeTab === "updates" || activeTab === "blog" ? "Contenido Enriquecido (Artículo/Bitácora)" : "Descripción"}
                                 </label>
-                                <textarea
-                                    className="w-full p-2 border rounded-xl bg-card text-foreground"
-                                    rows={5}
-                                    value={formData.description || formData.content || ""}
-                                    onChange={(e) => {
-                                        if (activeTab === "updates" || activeTab === "blog") {
-                                            setFormData({ ...formData, content: e.target.value });
-                                        } else {
-                                            setFormData({ ...formData, description: e.target.value });
-                                        }
-                                    }}
-                                    placeholder="Detalles sobre el registro o contenido del post..."
-                                    required
-                                />
+                                {activeTab === "updates" || activeTab === "blog" ? (
+                                    <RichTextEditor
+                                        value={formData.content || ""}
+                                        onChange={(htmlContent) => setFormData({ ...formData, content: htmlContent })}
+                                        placeholder="Escribe el artículo con formato, emojis e imágenes..."
+                                    />
+                                ) : (
+                                    <textarea
+                                        className="w-full p-2 border rounded-xl bg-card text-foreground"
+                                        rows={5}
+                                        value={formData.description || ""}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder="Detalles sobre el registro..."
+                                        required
+                                    />
+                                )}
                             </div>
                         )}
 
