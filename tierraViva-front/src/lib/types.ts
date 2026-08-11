@@ -101,6 +101,8 @@ export interface Animal {
     health_status_display?: string;
     weight?: string;
     provenance?: string;
+    price?: number | string;
+    is_active?: boolean;
     
     // Campos calculados
     age_display: string;
@@ -166,6 +168,7 @@ export interface SponsorshipTier {
     stripe_price_id_annual?: string;
     description: string;
     image_url?: string;
+    is_active?: boolean;
 }
 
 export interface ActivityImage {
@@ -294,6 +297,8 @@ export interface RescueRequest {
     phone: string;
     status: 'PENDING_APPROVAL' | 'PENDING_RESCUE' | 'SCHEDULED' | 'RESCUED' | 'CANCELLED';
     status_display: string;
+    reporter_name?: string;
+    location?: string;
     photo?: string;
     created_at: string;
     updated_at: string;

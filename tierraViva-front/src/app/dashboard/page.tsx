@@ -12,6 +12,7 @@ import {
 } from "@/lib/types";
 import AnimalFolders from "@/components/animals/AnimalFolders";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { 
     TrendingUp, 
@@ -484,7 +485,7 @@ function FamilyDashboard() {
                 </div>
                 <div className="p-8 border rounded-3xl bg-card shadow-sm hover:border-primary/20 transition-all">
                     <p className="text-xs font-black uppercase text-muted-foreground">Alertas</p>
-                    <h3 className="text-4xl font-black text-destructive mt-2">{loading ? "..." : rescues.filter(r => r.status === "PENDING").length}</h3>
+                    <h3 className="text-4xl font-black text-destructive mt-2">{loading ? "..." : rescues.filter(r => r.status === "PENDING_APPROVAL" || r.status === "PENDING_RESCUE").length}</h3>
                     <p className="text-sm font-bold text-foreground mt-1">Rescates Pendientes de Atención</p>
                 </div>
             </div>
@@ -500,12 +501,12 @@ function FamilyDashboard() {
                             {rescues.slice(0, 3).map((rescue) => (
                                 <div key={rescue.id} className="p-5 border rounded-2xl bg-muted/20 space-y-2">
                                     <div className="flex justify-between items-center">
-                                        <span className="font-bold text-foreground">#{rescue.id} - {rescue.reporter_name}</span>
+                                        <span className="font-bold text-foreground">#{rescue.id} - {rescue.reporter_name || rescue.phone || "Reporte"}</span>
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                                            rescue.status === "PENDING" ? "bg-amber-500/10 text-amber-500" : "bg-green-500/10 text-green-500"
-                                        }`}>{rescue.status}</span>
+                                            (rescue.status === "PENDING_APPROVAL" || rescue.status === "PENDING_RESCUE") ? "bg-amber-500/10 text-amber-500" : "bg-green-500/10 text-green-500"
+                                        }`}>{rescue.status_display || rescue.status}</span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">{rescue.location}</p>
+                                    <p className="text-xs text-muted-foreground">{rescue.location || rescue.address}</p>
                                     <p className="text-sm font-medium">{rescue.description}</p>
                                 </div>
                             ))}
