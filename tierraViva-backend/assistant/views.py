@@ -19,7 +19,7 @@ def _build_tierra_viva_context() -> str:
     
     # 1. Animals
     try:
-        animals = Animal.objects.filter(is_adopted=False)[:10]
+        animals = Animal.objects.filter(is_available_for_sponsorship=True)[:10]
         context.append("=== ANIMALES EN EL SANTUARIO (Disponibles para Apadrinamiento) ===")
         if animals.exists():
             for a in animals:
