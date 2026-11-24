@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import environ
 from datetime import timedelta
+import urllib.parse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -141,16 +142,41 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME", default="postgres"),
-        "USER": env("DB_USER", default="postgres"),
-        "PASSWORD": env("DB_PASSWORD", default=""),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default="5432"),
+# Database Configuration
+# Supabase Pooler (Supavisor / PgBouncer) & PostgreSQL Support
+raw_db_url = env("DATABASE_URL", default=None)
+
+if raw_db_url:
+    DATABASES = {
+        "default": env.db("DATABASE_URL")
     }
-}
+else:
+    db_user = env("DB_USER", default="postgres")
+    db_password = env("DB_PASSWORD", default="")
+    db_host = env("DB_HOST", default="localhost")
+    db_port = env("DB_PORT", default="5432")
+    db_name = env("DB_NAME", default="postgres")
+    
+    encoded_user = urllib.parse.quote_plus(db_user)
+    encoded_password = urllib.parse.quote_plus(db_password)
+    
+    # Assemble RFC-compliant DATABASE_URL
+    constructed_url = f"postgres://{encoded_user}:{encoded_password}@{db_host}:{db_port}/{db_name}"
+    DATABASES = {
+        "default": env.db_url_config(constructed_url)
+    }
+
+# Supabase Supavisor / PgBouncer pooler optimizations & SSL enforcement
+DATABASES["default"]["OPTIONS"] = DATABASES["default"].get("OPTIONS", {})
+DATABASES["default"]["OPTIONS"]["sslmode"] = env("SSLMODE", default="require")
+
+# Transaction pooler (port 6543) compatibility:
+# Disable server-side cursors and persistent connections to prevent prepared statement/cursor leakage
+if str(DATABASES["default"].get("PORT", "")) == "6543" or "pooler.supabase.com" in str(DATABASES["default"].get("HOST", "")):
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES["default"]["CONN_MAX_AGE"] = 0
+else:
+    DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=0)
 
 # Force using SQLite when running tests to avoid Supabase connection pooler conflicts
 import sys

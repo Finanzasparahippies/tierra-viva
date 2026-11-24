@@ -5,16 +5,21 @@ services:
     image: tierraviva-backend:staging
     build:
       context: ./tierraViva-backend
-      dockerfile: Dockerfile
-    env_file: .env.staging
+      dockerfile: Dockerfile.staging
+    env_file:
+      - .env.staging
     volumes:
-      - ./tierraViva-backend:/app:Z
       - static_volume_staging:/app/staticfiles
       - media_volume_staging:/app/media
     environment:
+      - PYTHONUNBUFFERED=1
       - STATIC_ROOT=/app/staticfiles
       - MEDIA_ROOT=/app/media
       - ENVIRONMENT=staging
+    deploy:
+      resources:
+        limits:
+          memory: 600M
     restart: always
     networks:
       - default
@@ -25,14 +30,19 @@ services:
     image: tierraviva-frontend:staging
     build:
       context: ./tierraViva-front
-      dockerfile: Dockerfile
-    volumes:
-      - ./tierraViva-front:/app:Z
-      - /app/node_modules
-      - /app/.next
-    env_file: .env.staging
+      dockerfile: Dockerfile.staging
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://staging.tierraviva.com.mx/api}
+    env_file:
+      - .env.staging
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000/api}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://staging.tierraviva.com.mx/api}
+      - NODE_OPTIONS=--max-old-space-size=768
+      - NEXT_TELEMETRY_DISABLED=1
+    deploy:
+      resources:
+        limits:
+          memory: 800M
     restart: always
     networks:
       - default

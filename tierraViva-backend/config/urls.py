@@ -18,7 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
+
+def health_check(request):
+    return JsonResponse({"status": "ok", "service": "tierraviva-backend"})
 from users.views import UserViewSet
 from animals.views import AnimalViewSet, AnimalContentFolderViewSet, SpeciesViewSet
 from shop.views import ProductViewSet, OrderViewSet, CartViewSet
@@ -47,6 +51,7 @@ router.register(r'sponsorship/tiers', SponsorshipTierViewSet, basename='sponsors
 router.register(r'sponsorship/updates', RanchUpdateViewSet, basename='ranch-update')
 
 urlpatterns = [
+    path('api/health/', health_check, name='health-check'),
     path('admin/', admin.site.urls),
     path("api/blog/", include("blog.urls")),
     path("api/newsletter/", include("newsletter.urls")),
