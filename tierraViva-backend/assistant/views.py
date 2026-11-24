@@ -138,7 +138,7 @@ class AssistantChatView(APIView):
                 if role in ['user', 'assistant', 'system']:
                     groq_messages.append({"role": role, "content": content})
 
-            groq_model = getattr(settings, 'GROQ_MODEL', '') or 'llama-3.3-70b-versatile'
+            groq_model = getattr(settings, 'GROQ_MODEL', '') or 'qwen/qwen3.8-27b'
             completion = client.chat.completions.create(
                 messages=groq_messages,
                 model=groq_model,
