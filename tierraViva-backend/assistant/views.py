@@ -107,22 +107,26 @@ class AssistantChatView(APIView):
         if not api_key:
             logger.warning("GROQ_API_KEY is not configured in Django settings. Virtual assistant IA connection disabled.")
             return Response({
+                "error": "El servicio de asistente de IA no está configurado.",
                 "reply": "Hola, gracias por contactarnos. Por el momento el asistente virtual no tiene configurada su conexión de IA. Por favor, vuelve a intentar más tarde o escríbenos directamente por redes sociales."
-            }, status=status.HTTP_200_OK)
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         messages_input = request.data.get('messages', [])
         if not messages_input:
-            # Fallback if they just send a "prompt" string
-            prompt = request.data.get('prompt')
+            # Fallback if they send "prompt" or "message" string
+            prompt = request.data.get('prompt') or request.data.get('message')
             if prompt:
                 messages_input = [{"role": "user", "content": prompt}]
             else:
-                return Response({"error": "messages or prompt is required"}, status=400)
+                return Response({"error": "messages, prompt, or message is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            import httpx
             from groq import Groq
 
-            client = Groq(api_key=api_key)
+            # Instantiate Groq with explicit http_client to prevent httpx >= 0.28 'proxies' kwarg crash
+            http_client = httpx.Client(timeout=30.0)
+            client = Groq(api_key=api_key, http_client=http_client)
             
             # Format history for Groq
             groq_messages = [{"role": "system", "content": _build_system_prompt()}]
@@ -147,5 +151,7 @@ class AssistantChatView(APIView):
         except Exception as e:
             logger.error(f"Error generating Groq response: {e}")
             return Response({
+                "error": "Error de comunicación con el servicio de IA upstream.",
+                "detail": str(e),
                 "reply": "Lo lamento, experimenté una dificultad temporal para procesar tu pregunta en este momento. Por favor, intenta de nuevo en unos segundos."
-            }, status=status.HTTP_200_OK)
+            }, status=status.HTTP_502_BAD_GATEWAY)

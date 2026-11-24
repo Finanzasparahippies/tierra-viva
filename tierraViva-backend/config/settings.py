@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     "activities",
     "dashboard",
     "assistant",
+    "integrations",
 ]
 
 # CKEditor 5 Configuration
@@ -317,6 +318,12 @@ SES_DEFAULT_FROM_EMAIL = env("SES_DEFAULT_FROM_EMAIL", default="Tierra Viva <tie
 
 # Groq Cloud AI Assistant
 GROQ_API_KEY = env("GROQ_API_KEY", default="")
+
+# Nectar Labs Core Platform Remote Federation
+NECTAR_API_BASE_URL = env("NECTAR_API_BASE_URL", default="https://api.nectarlabs.dev")
+NECTAR_TENANT_SLUG = env("NECTAR_TENANT_SLUG", default="tierra-viva")
+NECTAR_TENANT_API_KEY = env("NECTAR_TENANT_API_KEY", default="")
+NECTAR_WEBHOOK_SECRET = env("NECTAR_WEBHOOK_SECRET", default="")
 
 # Logging configuration to display logs in console with Nectar Labs styling
 LOGGING = {

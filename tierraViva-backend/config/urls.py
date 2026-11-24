@@ -60,6 +60,7 @@ urlpatterns = [
     path('api/sponsorship/', include('sponsorship.urls')),
     path('api/dashboard/', include('dashboard.urls')),
     path('api/assistant/', include('assistant.urls')),
+    path('api/webhooks/', include('integrations.urls')),
     path("ckeditor5/", include("django_ckeditor_5.urls")),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
